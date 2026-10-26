@@ -7,6 +7,12 @@
   padding: 2rem;
   padding-bottom: calc(10rem + env(safe-area-inset-bottom, 0px));
   overflow: hidden;
+  transition: padding-bottom 0.35s ease;
+}
+
+/* Cuando el patito ya no está, el menú vuelve al centro real */
+.home--no-duck {
+  padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
 }
 
 .home__content {
@@ -15,6 +21,7 @@
   align-items: center;
   gap: 2rem;
   margin-top: 1rem;
+  transition: margin 0.35s ease;
 }
 
 @media (max-width: 640px) {
@@ -27,6 +34,10 @@
     justify-content: center;
     overflow: hidden;
     touch-action: none;
+  }
+
+  .home--no-duck .home__content {
+    margin-bottom: 0;
   }
 
   /* El menú queda centrado, ligeramente por encima del centro

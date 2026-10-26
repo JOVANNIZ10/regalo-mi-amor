@@ -68,7 +68,11 @@ export default function Home({ onStartQuiz, quizCompleted = false }: HomeProps) 
   }, [])
 
   return (
-    <main className="home">
+    <main
+      className={
+        'home' + (!showDuckOverlay && !showDuckCorner ? ' home--no-duck' : '')
+      }
+    >
       {showDuckOverlay && (
         <div className="duck-overlay" onClick={closeOverlay}>
           <div className="duck-dialog" onClick={closeOverlay}>
