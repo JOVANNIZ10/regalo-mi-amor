@@ -81,6 +81,7 @@
   object-fit: cover;
   object-position: center 40%;
   transform: scale(1.15);
+  margin-bottom: 1rem;
   border: 2px solid rgba(255, 255, 255, 0.3);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
 }
