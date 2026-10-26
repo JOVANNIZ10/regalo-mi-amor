@@ -7,6 +7,7 @@ import './Home.css'
 export interface HomeProps {
   onStartQuiz?: () => void
   onOpenLetter?: () => void
+  onOpenGifts?: () => void
   quizCompleted?: boolean
   /** Muestra el saludo del patito de "cuestionario completado" (solo una vez) */
   showCompletionGreeting?: boolean
@@ -36,6 +37,7 @@ function LockIcon() {
 export default function Home({
   onStartQuiz,
   onOpenLetter,
+  onOpenGifts,
   quizCompleted = false,
   showCompletionGreeting = false,
   onCompletionGreetingShown,
@@ -141,6 +143,7 @@ export default function Home({
                 ? 'Completa el cuestionario para desbloquear'
                 : undefined
             }
+            onClick={onOpenGifts}
           >
             Regalos
           </GlassButton>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Home from './pages/Home'
 import Quiz from './pages/Quiz'
 import Letter from './pages/Letter'
+import Gifts from './pages/Gifts'
 
 export default function App() {
   const [page, setPage] = useState('home')
@@ -23,6 +24,10 @@ export default function App() {
     return <Letter onBack={() => setPage('home')} />
   }
 
+  if (page === 'gifts') {
+    return <Gifts onBack={() => setPage('home')} />
+  }
+
   return (
     <Home
       quizCompleted={quizCompleted}
@@ -30,6 +35,7 @@ export default function App() {
       onCompletionGreetingShown={() => setCompletionGreetingPending(false)}
       onStartQuiz={() => setPage('quiz')}
       onOpenLetter={() => setPage('letter')}
+      onOpenGifts={() => setPage('gifts')}
     />
   )
 }
