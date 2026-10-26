@@ -46,7 +46,6 @@ export default function Home() {
               <p className="speech-bubble__name">Ivan, el novio mas guapo e inteligente del universo</p>
             </div>
             <img src={pato} alt="Patito rosa" className="duck-image" />
-            <button className="duck-close" onClick={closeOverlay}>×</button>
           </div>
         </div>
       )}
