@@ -26,6 +26,47 @@
   gap: 0.6rem;
 }
 
+.quiz__topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.quiz__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.3rem 0.7rem 0.3rem 0.4rem;
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--text-2);
+  background: color-mix(in srgb, var(--surface-1) 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary-100) 14%, transparent);
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.quiz__back svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.quiz__back:hover {
+  color: var(--text-1);
+  background: color-mix(in srgb, var(--surface-3) 65%, transparent);
+  border-color: color-mix(in srgb, var(--accent-400) 45%, transparent);
+}
+
+.quiz__back:focus-visible {
+  outline: 2px solid var(--accent-400);
+  outline-offset: 2px;
+}
+
 .quiz__eyebrow {
   margin: 0;
   font-size: 0.8rem;

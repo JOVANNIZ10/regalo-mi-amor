@@ -6,7 +6,11 @@ import './Home.css'
 
 export interface HomeProps {
   onStartQuiz?: () => void
+  onOpenLetter?: () => void
   quizCompleted?: boolean
+  /** Muestra el saludo del patito de "cuestionario completado" (solo una vez) */
+  showCompletionGreeting?: boolean
+  onCompletionGreetingShown?: () => void
 }
 
 const COMPLETED_MESSAGE =
@@ -29,8 +33,18 @@ function LockIcon() {
   )
 }
 
-export default function Home({ onStartQuiz, quizCompleted = false }: HomeProps) {
-  const [showDuckOverlay, setShowDuckOverlay] = useState(true)
+export default function Home({
+  onStartQuiz,
+  onOpenLetter,
+  quizCompleted = false,
+  showCompletionGreeting = false,
+  onCompletionGreetingShown,
+}: HomeProps) {
+  // El overlay solo se muestra al entrar por primera vez o justo después
+  // de completar el cuestionario. Al volver desde otra sección, no.
+  const [showDuckOverlay, setShowDuckOverlay] = useState(
+    !quizCompleted || showCompletionGreeting
+  )
   const [showDuckCorner, setShowDuckCorner] = useState(false)
   const [duckMessage, setDuckMessage] = useState(
     quizCompleted
@@ -41,7 +55,12 @@ export default function Home({ onStartQuiz, quizCompleted = false }: HomeProps) 
 
   const closeOverlay = () => {
     setShowDuckOverlay(false)
-    if (quizCompleted) return
+
+    if (quizCompleted) {
+      onCompletionGreetingShown?.()
+      return
+    }
+
     setTimeout(() => setShowDuckCorner(true), 300)
   }
 
@@ -109,8 +128,9 @@ export default function Home({ onStartQuiz, quizCompleted = false }: HomeProps) 
                 ? 'Completa el cuestionario para desbloquear'
                 : undefined
             }
+            onClick={onOpenLetter}
           >
-            Video
+            Carta
           </GlassButton>
           <GlassButton
             size="lg"
@@ -128,7 +148,7 @@ export default function Home({ onStartQuiz, quizCompleted = false }: HomeProps) 
 
         {!quizCompleted && (
           <p className="home__lock-hint">
-            Completa el cuestionario para desbloquear Video y Regalos
+            Completa el cuestionario para desbloquear Carta y Regalos
           </p>
         )}
       </div>

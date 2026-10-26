@@ -1,0 +1,324 @@
+.letter {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  overflow: hidden;
+}
+
+/* ---------- Diálogo del patito ---------- */
+.letter-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  animation: letterFadeIn 0.3s ease;
+  cursor: pointer;
+}
+
+.letter-overlay__dialog {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 1rem;
+  max-width: min(420px, 92vw);
+  animation: letterRise 0.4s ease;
+}
+
+.letter-overlay__bubble {
+  position: relative;
+  padding: 1.5rem;
+  text-align: center;
+  color: #1a1a1a;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 1.5rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.letter-overlay__text {
+  margin: 0 0 0.75rem;
+  font-size: 0.98rem;
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+.letter-overlay__name {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-style: italic;
+  color: #d946ef;
+}
+
+.letter-overlay__duck {
+  width: min(210px, 55vw);
+  height: min(210px, 55vw);
+  object-fit: contain;
+  filter: drop-shadow(0 10px 30px rgba(255, 158, 203, 0.6));
+  animation: letterFloat 2s ease-in-out infinite;
+}
+
+/* ---------- Escenario ---------- */
+.letter__stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding-bottom: 2.5rem; /* espacio para el texto del sobre */
+}
+
+/* ---------- Pie (botones) ---------- */
+.letter__footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 1rem;
+}
+
+/* ---------- Sobre cerrado ---------- */
+.envelope {
+  position: relative;
+  width: min(360px, 84vw);
+  aspect-ratio: 1.55;
+  padding: 0;
+  font: inherit;
+  background: linear-gradient(160deg, #fdf8f2, #f2e6dc);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 12px;
+  box-shadow:
+    0 25px 60px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.envelope:hover {
+  transform: translateY(-6px) rotate(-1deg);
+  box-shadow:
+    0 35px 70px rgba(0, 0, 0, 0.5),
+    0 0 40px rgba(255, 158, 203, 0.25);
+}
+
+.envelope:active {
+  transform: translateY(-2px) scale(0.99);
+}
+
+.envelope:focus-visible {
+  outline: 2px solid var(--accent-400);
+  outline-offset: 4px;
+}
+
+/* solapa superior */
+.envelope__flap {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #f7e9dd, #e9d3c4);
+  clip-path: polygon(0 0, 100% 0, 50% 58%);
+  border-radius: 12px 12px 0 0;
+}
+
+/* cuerpo del sobre */
+.envelope__body {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(200deg, transparent 45%, #f6ece1 46%);
+  border-radius: 12px;
+}
+
+.envelope__seal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.4rem;
+  height: 3.4rem;
+  font-size: 1.4rem;
+  color: #fff;
+  background: radial-gradient(circle at 35% 30%, #ff8fc0, #c0308f);
+  border-radius: 50%;
+  box-shadow:
+    0 8px 18px rgba(192, 48, 143, 0.45),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.18);
+}
+
+.envelope__hint {
+  position: absolute;
+  bottom: -2.4rem;
+  left: 0;
+  right: 0;
+  font-family: system-ui, sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+  text-align: center;
+  animation: letterPulse 2.4s ease-in-out infinite;
+}
+
+/* ---------- Carta abierta ---------- */
+.letter-card {
+  position: relative;
+  width: min(560px, 92vw);
+  max-height: min(70vh, 640px);
+  overflow-y: auto;
+  padding: clamp(1.5rem, 5vw, 2.5rem);
+  color: #3b2c36;
+  font-family: "Georgia", "Times New Roman", serif;
+  font-size: 1rem;
+  line-height: 1.75;
+  text-align: left;
+  border-radius: 8px;
+  box-shadow:
+    0 30px 70px rgba(0, 0, 0, 0.5),
+    0 0 60px rgba(255, 158, 203, 0.18);
+  background:
+    repeating-linear-gradient(
+      180deg,
+      transparent 0,
+      transparent 2.05rem,
+      rgba(59, 44, 54, 0.08) 2.05rem,
+      rgba(59, 44, 54, 0.08) calc(2.05rem + 1px)
+    ),
+    linear-gradient(165deg, #fffdf9, #f7eee4);
+  animation: letterOpen 0.55s ease;
+}
+
+.letter-card p {
+  margin: 0 0 1.05rem;
+}
+
+.letter-card__greeting {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.letter-card__signature {
+  margin-top: 1.5rem !important;
+  font-style: italic;
+  text-align: right;
+}
+
+.letter-card__heart {
+  position: absolute;
+  right: 1.25rem;
+  bottom: 1rem;
+  font-size: 1.1rem;
+  color: #d946ef;
+}
+
+/* ---------- Botón cerrar ---------- */
+.letter__close {
+  padding: 0;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--text-3);
+  background: none;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  cursor: pointer;
+  opacity: 0.85;
+}
+
+.letter__close:hover {
+  color: var(--text-1);
+}
+
+/* ---------- Animaciones ---------- */
+@keyframes letterFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes letterRise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes letterFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes letterPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+@keyframes letterOpen {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.94) rotate(-1.5deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+}
+
+@media (max-width: 640px) {
+  .letter {
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .letter__stage {
+    padding-bottom: 2.25rem;
+  }
+
+  .letter__footer {
+    bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .letter-overlay__duck {
+    width: min(160px, 45vw);
+    height: min(160px, 45vw);
+  }
+
+  .letter-overlay__text {
+    font-size: 0.92rem;
+  }
+
+  .letter-card {
+    max-height: 64vh;
+    font-size: 0.95rem;
+  }
+
+  .envelope {
+    width: min(300px, 82vw);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .letter-overlay__duck,
+  .envelope__hint {
+    animation: none;
+  }
+
+  .envelope,
+  .letter-card {
+    transition: none;
+    animation: none;
+  }
+}

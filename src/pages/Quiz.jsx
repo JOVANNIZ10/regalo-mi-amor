@@ -134,9 +134,30 @@ export default function Quiz({ onBack, onComplete }) {
     <main className="quiz">
       <section className="quiz__panel glass">
         <header className="quiz__header">
-          <p className="quiz__eyebrow">
-            Pregunta {current + 1} de {total}
-          </p>
+          <div className="quiz__topbar">
+            <button
+              type="button"
+              className="quiz__back"
+              onClick={onBack}
+              aria-label="Volver al menú"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+              Menú
+            </button>
+            <p className="quiz__eyebrow">
+              Pregunta {current + 1} de {total}
+            </p>
+          </div>
           <div className="quiz__progress" aria-hidden="true">
             <span className="quiz__progress-bar" style={{ width: `${progress}%` }} />
           </div>
