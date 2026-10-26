@@ -50,10 +50,17 @@ html {
   font-family: system-ui;
 }
 
+html {
+  height: 100%;
+  overscroll-behavior: none;
+}
+
 body {
   min-block-size: 100vh;
   height: 100dvh;
   overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
   color: var(--text-3);
   background-color: var(--primary-900);
   background-image:
@@ -64,6 +71,11 @@ body {
   background-size: 80px 80px, auto, auto, auto;
   background-attachment: fixed;
   line-height: 1.5;
+}
+
+#root {
+  height: 100dvh;
+  overflow: hidden;
 }
 
 h1 {

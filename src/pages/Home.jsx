@@ -30,15 +30,14 @@ export default function Home() {
   }
 
   useEffect(() => {
-    const timer = setTimeout(closeOverlay, 8000)
-    return () => clearTimeout(timer)
+    // No auto-close, only on click
   }, [])
 
   return (
     <main className="home">
       {showDuckOverlay && (
         <div className="duck-overlay" onClick={closeOverlay}>
-          <div className="duck-dialog" onClick={(e) => e.stopPropagation()}>
+          <div className="duck-dialog" onClick={closeOverlay}>
             <div className="speech-bubble">
               <p className="speech-bubble__text">
                 Hola, soy tu patito. Como ves, alguien (tu), me ha vestido de rosa. Por cierto, feliz cumpleaños mi amor.

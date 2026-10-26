@@ -18,9 +18,13 @@
 
 @media (max-width: 640px) {
   .home {
+    position: fixed;
+    inset: 0;
     padding: 1rem;
     align-items: flex-start;
-    padding-top: 5.5rem;
+    padding-top: 4.5rem;
+    overflow: hidden;
+    touch-action: none;
   }
 
   .home__content {
@@ -39,7 +43,7 @@
   }
 
   .duck-corner {
-    bottom: 10rem;
+    bottom: 5rem;
     left: 0.5rem;
     max-width: min(290px, 88vw);
     gap: 0.4rem;
@@ -94,6 +98,7 @@
   justify-content: center;
   z-index: 1000;
   animation: fadeIn 0.3s ease;
+  cursor: pointer;
 }
 
 .duck-dialog {
@@ -104,6 +109,7 @@
   gap: 1rem;
   max-width: min(400px, 90vw);
   animation: slideUp 0.4s ease;
+  cursor: pointer;
 }
 
 .duck-image {
