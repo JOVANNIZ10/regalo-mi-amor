@@ -60,8 +60,8 @@ export default function Home() {
 
       <div className="home__content">
         <img src={foto} alt="Foto" className="home__photo" />
-        <div className="home__buttons">
-          <GlassButton size="lg">Questionario</GlassButton>
+        <div className="home__buttons"> 
+          <GlassButton size="lg">Cuestionario</GlassButton>
           <GlassButton size="lg">Video</GlassButton>
           <GlassButton size="lg">Regalos</GlassButton>
         </div>
