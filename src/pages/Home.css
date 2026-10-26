@@ -97,6 +97,18 @@
   width: 100%;
 }
 
+.home__lock-hint {
+  margin: -0.5rem 0 0;
+  font-size: 0.8rem;
+  text-align: center;
+  color: var(--text-3);
+  opacity: 0.85;
+}
+
+.home__buttons .glass-btn .glass-btn__icon {
+  opacity: 0.9;
+}
+
 .duck-overlay {
   position: fixed;
   inset: 0;

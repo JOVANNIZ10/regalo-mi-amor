@@ -12,6 +12,23 @@ export interface HomeProps {
 const COMPLETED_MESSAGE =
   'Muy bien mi vida, como veo has completado el cuestionario, ahora, puedes acceder a cualquier apartado del menu.'
 
+function LockIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="3" y="11" width="18" height="11" rx="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
+  )
+}
+
 export default function Home({ onStartQuiz, quizCompleted = false }: HomeProps) {
   const [showDuckOverlay, setShowDuckOverlay] = useState(true)
   const [showDuckCorner, setShowDuckCorner] = useState(false)
@@ -79,9 +96,37 @@ export default function Home({ onStartQuiz, quizCompleted = false }: HomeProps) 
           <GlassButton size="lg" onClick={onStartQuiz}>
             Cuestionario
           </GlassButton>
-          <GlassButton size="lg">Video</GlassButton>
-          <GlassButton size="lg">Regalos</GlassButton>
+          <GlassButton
+            size="lg"
+            disabled={!quizCompleted}
+            icon={!quizCompleted ? <LockIcon /> : undefined}
+            title={
+              !quizCompleted
+                ? 'Completa el cuestionario para desbloquear'
+                : undefined
+            }
+          >
+            Video
+          </GlassButton>
+          <GlassButton
+            size="lg"
+            disabled={!quizCompleted}
+            icon={!quizCompleted ? <LockIcon /> : undefined}
+            title={
+              !quizCompleted
+                ? 'Completa el cuestionario para desbloquear'
+                : undefined
+            }
+          >
+            Regalos
+          </GlassButton>
         </div>
+
+        {!quizCompleted && (
+          <p className="home__lock-hint">
+            Completa el cuestionario para desbloquear Video y Regalos
+          </p>
+        )}
       </div>
     </main>
   )
