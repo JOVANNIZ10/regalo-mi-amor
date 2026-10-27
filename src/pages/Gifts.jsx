@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import GlassButton from '../components/GlassButton'
-import pato from '../assets/images/pato.png'
-import patoEstera from '../assets/images/patoEstera.png'
-import regalo1 from '../assets/images/regalo1.png'
-import regalo2 from '../assets/images/regalo2.png'
-import regalo3 from '../assets/images/regalo3.png'
-import regalo4 from '../assets/images/regalo4.png'
+import pato from '../assets/images/pato.webp'
+import patoEstera from '../assets/images/patoEstera.webp'
+import regalo1 from '../assets/images/regalo1.webp'
+import regalo2 from '../assets/images/regalo2.webp'
+import regalo3 from '../assets/images/regalo3.webp'
+import regalo4 from '../assets/images/regalo4.webp'
 import './Gifts.css'
 
 /* ------------------------------------------------------------------

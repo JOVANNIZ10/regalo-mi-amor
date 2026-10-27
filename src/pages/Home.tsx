@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import GlassButton from '../components/GlassButton'
-import foto from '../assets/images/foto.jpeg'
-import pato from '../assets/images/pato.png'
-import pose1 from '../assets/images/patoChicoPoseHablando1.png'
-import pose2 from '../assets/images/patoChicoPoseHablando2.png'
+import foto from '../assets/images/foto.jpg'
+import pato from '../assets/images/pato.webp'
+import pose1 from '../assets/images/patoChicoPoseHablando1.webp'
+import pose2 from '../assets/images/patoChicoPoseHablando2.webp'
 import './Home.css'
 
 export interface HomeProps {

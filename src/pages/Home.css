@@ -78,11 +78,6 @@
     padding: 0.5rem 0.8rem;
     flex: 1;
   }
-
-  .speech-bubble--corner::before {
-    top: 50%;
-    transform: translateY(-50%);
-  }
 }
 
 .home__photo {
@@ -204,20 +199,6 @@
   position: relative;
   padding: 1rem 1.25rem;
   font-size: 0.9rem;
-  margin-top: 0.25rem;
-}
-
-.speech-bubble--corner::before {
-  content: '';
-  position: absolute;
-  left: -10px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 0;
-  height: 0;
-  border-top: 10px solid transparent;
-  border-bottom: 10px solid transparent;
-  border-right: 10px solid rgba(255, 255, 255, 0.95);
 }
 
 @keyframes fadeIn {
