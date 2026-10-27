@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import GlassButton from '../components/GlassButton'
 import foto from '../assets/images/foto.jpeg'
 import pato from '../assets/images/pato.png'
+import pose1 from '../assets/images/patoChicoPoseHablando1.png'
+import pose2 from '../assets/images/patoChicoPoseHablando2.png'
 import './Home.css'
 
 export interface HomeProps {
@@ -80,6 +82,14 @@ export default function Home({
     }
   }
 
+  /* Imagen del patito: la primera frase usa el pato normal y, en el resto,
+     se alternan las poses de habla (linea 1 -> pose 1, linea 2 -> pose 2,
+     linea 3 -> pose 1, linea 4 -> pose 2...). */
+  const currentLine = Math.max(0, duckClickCount - 1)
+  const duckCornerImage =
+    duckClickCount === 0 ? pato : currentLine % 2 === 0 ? pose1 : pose2
+  const duckCornerAlt = duckClickCount === 0 ? 'Patito rosa' : `Patito, pose ${currentLine % 2 ? 2 : 1}`
+
   const overlayMessage = quizCompleted
     ? COMPLETED_MESSAGE
     : 'Hola, soy tu patito. Como ves, alguien (tu), me ha vestido de rosa. Por cierto, feliz cumpleaños mi amor.'
@@ -108,7 +118,11 @@ export default function Home({
 
       {showDuckCorner && (
         <div className="duck-corner" onClick={handleDuckClick}>
-          <img src={pato} alt="Patito rosa" className="duck-corner__image" />
+          <img
+            src={duckCornerImage}
+            alt={duckCornerAlt}
+            className="duck-corner__image"
+          />
           <div className="speech-bubble speech-bubble--corner">
             <p className="speech-bubble__text">{duckMessage}</p>
           </div>

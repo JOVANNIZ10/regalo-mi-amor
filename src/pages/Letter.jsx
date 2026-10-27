@@ -42,11 +42,9 @@ export default function Letter({ onBack }) {
           </button>
         ) : (
           <article className="letter-card">
-            <p className="letter-card__greeting">Mi vida:</p>
+            <p className="letter-card__greeting">Hola iubire:</p>
             <p>
-              No sé cómo decirte todo lo que siento, así que te lo dejo por
-              escrito: eres lo mejor que me ha pasado. Gracias por cada risa, por
-              cada abrazo y por quedarte incluso cuando no era fácil.
+              Gracias por formar parte de mi vida. Tu bella sonrisa me alegra todos los dias, no sabes lo bendecida que estas en tener esos dientes perfectos. Nunca pensé que mi vida daría un giro tan radical y se encontraria contigo, eres la mejor decisión y cosa que me ha pasado. Quiero pasar el resto de mi vida contigo y verte sonreir cada segundo. Espero ser suficiente y lo mejor para ti. Te amo preciosa mia.
             </p>
             <p>
               Mereces esto y un infinito. Y yo quiero dártelo, poquito a poco,
