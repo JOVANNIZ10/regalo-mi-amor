@@ -17,8 +17,21 @@
 import bgMusicOgg from '../assets/audios/musicaAmbienteInazuma.ogg'
 import bgMusicMp3 from '../assets/audios/musicaAmbienteInazuma64.mp3'
 
-/* Volumen de la musica de fondo (0 a 1), ajustable desde la ruedita */
-const DEFAULT_MUSIC_VOLUME = 0.15
+/* ¿Dispositivo movil? (para arrancar el sonido mas bajo ahi) */
+export function isMobileDevice() {
+  try {
+    return (
+      window.matchMedia('(pointer: coarse)').matches ||
+      /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+    )
+  } catch {
+    return false
+  }
+}
+
+/* Volumen de la musica de fondo (0 a 1), ajustable desde la ruedita.
+   En movil arranca al 5% y en escritorio al 15%. */
+const DEFAULT_MUSIC_VOLUME = isMobileDevice() ? 0.05 : 0.15
 let bgVolume = DEFAULT_MUSIC_VOLUME
 
 let bgAudio = null
@@ -120,23 +133,23 @@ export function initBackgroundMusic() {
     }
   }
 
-  /* intento automatico */
+  /* Al primer gesto se conecta la musica al GainNode de Web Audio
+     (necesario para que el volumen se pueda cambiar en movil).
+     Se registra ANTES que el play para que el grafico ya exista. */
+  const unlockGraph = () => {
+    if (bgAudio) connectBgGain(bgAudio)
+  }
+  window.addEventListener('pointerdown', unlockGraph, { once: true })
+  window.addEventListener('touchstart', unlockGraph, { once: true })
+  window.addEventListener('keydown', unlockGraph, { once: true })
+
+  /* intento automatico (en escritorio suele sonar sin tocar nada) */
   tryPlay()
 
   /* reintento con la primera interaccion de cualquier tipo */
   window.addEventListener('pointerdown', tryPlay)
   window.addEventListener('touchstart', tryPlay)
   window.addEventListener('keydown', tryPlay)
-
-  /* Al primer gesto tambien se activan los graficos de volumen
-     (GainNode): asi en movil el volumen aplicado de verdad. */
-  const unlockGraphs = () => {
-    if (bgAudio) connectBgGain(bgAudio)
-    ensureDialogueGraph()
-  }
-  window.addEventListener('pointerdown', unlockGraphs, { once: true })
-  window.addEventListener('touchstart', unlockGraphs, { once: true })
-  window.addEventListener('keydown', unlockGraphs, { once: true })
 }
 
 /** La pagina actual lleva su propia pista: silencia el fondo */
@@ -155,56 +168,19 @@ export function resumeBackgroundMusic() {
 let dialogueVolume = 1
 const activeDialogAudios = new Set()
 
-/* En iPhone/Safari el volumen de un <audio> tampoco se puede cambiar.
-   Igual que con la musica, las voces pasan por un GainNode cuando el
-   navegador ya tiene el contexto de audio desbloqueado (primer gesto). */
-let dialogueCtx = null
-let dialogueGain = null
-const connectedDialogs = new WeakSet()
-
-function attachDialog(audio) {
-  if (!dialogueCtx || connectedDialogs.has(audio)) return
-
-  try {
-    const source = dialogueCtx.createMediaElementSource(audio)
-    source.connect(dialogueGain)
-    audio.volume = 1 /* el volumen lo manda el gain */
-    connectedDialogs.add(audio)
-  } catch {
-    /* no soportado o ya conectado: queda el volumen del elemento */
-  }
-}
-
-function ensureDialogueGraph() {
-  const Ctx = window.AudioContext ?? window.webkitAudioContext
-  if (!Ctx) return
-
-  if (!dialogueCtx) {
-    dialogueCtx = new Ctx()
-    dialogueGain = dialogueCtx.createGain()
-    dialogueGain.gain.value = dialogueVolume
-    dialogueGain.connect(dialogueCtx.destination)
-  }
-  dialogueCtx.resume().catch(() => {})
-
-  /* las voces que ya estuvieran creadas pasan tambien por el gain */
-  for (const audio of activeDialogAudios) attachDialog(audio)
-}
-
 export function getDialogueVolume() {
   return dialogueVolume
 }
 
-/** Ajusta el volumen de las voces, incluso las que suenan ahora mismo */
+/**
+ * Ajusta el volumen de las voces, incluso las que suenan ahora mismo.
+ * NOTA: iOS/Safari ignora el volumen de los <audio> (lo manda el boton
+ * fisico). Las voces se dejan nativas para que suenen SIEMPRE; en movil
+ * el volumen de las voces se ajusta con los botones del telefono.
+ */
 export function setDialogueVolume(volume) {
   dialogueVolume = Math.min(1, Math.max(0, volume))
-
-  ensureDialogueGraph()
-  if (dialogueGain) dialogueGain.gain.value = dialogueVolume
-
-  for (const audio of activeDialogAudios) {
-    if (!connectedDialogs.has(audio)) audio.volume = dialogueVolume
-  }
+  for (const audio of activeDialogAudios) audio.volume = dialogueVolume
 }
 
 /**
@@ -214,9 +190,8 @@ export function setDialogueVolume(volume) {
  */
 export function createDialogAudio(src) {
   const audio = new Audio(src)
-  audio.volume = dialogueGain ? 1 : dialogueVolume
+  audio.volume = dialogueVolume
   activeDialogAudios.add(audio)
-  if (dialogueCtx) attachDialog(audio)
   const unregister = () => activeDialogAudios.delete(audio)
   audio.addEventListener('ended', unregister)
   audio.addEventListener('error', unregister)
