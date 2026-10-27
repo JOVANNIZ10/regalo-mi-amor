@@ -65,7 +65,9 @@ export default function SettingsGear() {
 
   const changeMusic = (value) => {
     setMusic(value)
-    setMusicVolume(value / 100)
+    /* true: viene de un gesto del usuario, se puede crear el
+       GainNode de Web Audio (necesario para que funcione en movil) */
+    setMusicVolume(value / 100, true)
     try {
       localStorage.setItem(STORAGE_KEYS.music, String(value))
     } catch {
