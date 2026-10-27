@@ -14,6 +14,14 @@ export default function App() {
     setCompletionGreetingPending(true)
   }
 
+  /* Cada nuevo intento del cuestionario invalida el desbloqueo anterior:
+     solo se queda desbloqueado si la nueva prueba acaba en 6/6. */
+  const handleStartQuiz = () => {
+    setQuizCompleted(false)
+    setCompletionGreetingPending(false)
+    setPage('quiz')
+  }
+
   if (page === 'quiz') {
     return (
       <Quiz onBack={() => setPage('home')} onComplete={handleQuizComplete} />
@@ -33,7 +41,7 @@ export default function App() {
       quizCompleted={quizCompleted}
       showCompletionGreeting={completionGreetingPending}
       onCompletionGreetingShown={() => setCompletionGreetingPending(false)}
-      onStartQuiz={() => setPage('quiz')}
+      onStartQuiz={handleStartQuiz}
       onOpenLetter={() => setPage('letter')}
       onOpenGifts={() => setPage('gifts')}
     />

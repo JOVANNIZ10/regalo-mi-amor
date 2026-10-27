@@ -21,6 +21,12 @@ for (const file of files) {
   const outName = base + (isPhoto ? '.jpg' : '.webp')
   const output = path.join('src/assets/images', outName)
 
+  /* ya esta optimizado (la salida tendria el mismo nombre que el original) */
+  if (input === output) {
+    console.log(`skip ${file} (ya optimizado)`)
+    continue
+  }
+
   let pipeline = sharp(input).resize({
     width: meta.width > meta.height ? maxDim : null,
     height: meta.height >= meta.width ? maxDim : null,

@@ -4,9 +4,11 @@ import foto from '../assets/images/foto.jpg'
 import pato from '../assets/images/pato.webp'
 import pose1 from '../assets/images/patoChicoPoseHablando1.webp'
 import pose2 from '../assets/images/patoChicoPoseHablando2.webp'
-import pose3 from '../assets/images/patoChicoPoseDedos1.png'
-import pose4 from '../assets/images/patoChicoPoseCelebrando1.png'
-import pose5 from '../assets/images/patoChicoPoseOkey1.png'
+import pose3 from '../assets/images/patoChicoPoseDedos1.webp'
+import pose4 from '../assets/images/patoChicoPosecelebrando1.webp'
+import pose5 from '../assets/images/patoChicoPoseOkey1.webp'
+import pose6 from '../assets/images/patoChicoPoseBeso1.webp'
+
 
 
 
@@ -65,7 +67,7 @@ const CORNER_DIALOGUES: DuckDialogue[] = [
 const COMPLETED_DIALOGUE: DuckDialogue = {
   message:
     'Muy bien mi vida, como veo has completado el cuestionario, ahora, puedes acceder a cualquier apartado del menu.',
-  pose: pato,
+  pose: pose6,
 }
 
 function LockIcon() {

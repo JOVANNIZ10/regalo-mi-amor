@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import GlassButton from '../components/GlassButton'
-import pato from '../assets/images/pato.webp'
+import beso from '../assets/images/patoChicoPoseBeso1.webp'
+import triste from '../assets/images/patoChicoPoseTriste1.webp'
 import './Quiz.css'
 
 /* ------------------------------------------------------------------
@@ -115,7 +116,12 @@ export default function Quiz({ onBack, onComplete }) {
             </p>
           </div>
 
-          <img src={pato} alt="Patito rosa" className="quiz__duck" />
+          {/* prueba superada -> pose beso; fallida -> pose triste */}
+          <img
+            src={perfect ? beso : triste}
+            alt={perfect ? 'Patito chico beso' : 'Patito chico triste'}
+            className="quiz__duck"
+          />
         </div>
 
         <div className="quiz__actions quiz__actions--result">
