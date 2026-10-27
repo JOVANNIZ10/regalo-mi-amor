@@ -123,6 +123,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  /* sube un poco el dialogo respecto al centro */
+  padding-bottom: 6rem;
   z-index: 1000;
   animation: fadeIn 0.3s ease;
   cursor: pointer;
@@ -199,6 +201,20 @@
   position: relative;
   padding: 1rem 1.25rem;
   font-size: 0.9rem;
+}
+
+/* flechita que apunta al patito */
+.speech-bubble--corner::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-right: 10px solid rgba(255, 255, 255, 0.95);
 }
 
 @keyframes fadeIn {

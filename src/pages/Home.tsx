@@ -4,6 +4,12 @@ import foto from '../assets/images/foto.jpg'
 import pato from '../assets/images/pato.webp'
 import pose1 from '../assets/images/patoChicoPoseHablando1.webp'
 import pose2 from '../assets/images/patoChicoPoseHablando2.webp'
+import pose3 from '../assets/images/patoChicoPoseDedos1.png'
+import pose4 from '../assets/images/patoChicoPoseCelebrando1.png'
+import pose5 from '../assets/images/patoChicoPoseOkey1.png'
+
+
+
 import './Home.css'
 
 export interface HomeProps {
@@ -16,8 +22,51 @@ export interface HomeProps {
   onCompletionGreetingShown?: () => void
 }
 
-const COMPLETED_MESSAGE =
-  'Muy bien mi vida, como veo has completado el cuestionario, ahora, puedes acceder a cualquier apartado del menu.'
+/* ------------------------------------------------------------------
+   Dialogos del patito. Cada entrada contiene el mensaje y la pose
+   (imagen) que se muestra mientras dice esa linea.
+------------------------------------------------------------------ */
+interface DuckDialogue {
+  message: string
+  pose: string
+}
+
+/* Dialogo grande del patito al entrar (con la firma) */
+const INTRO_DIALOGUE: DuckDialogue = {
+  message:
+    'Hola, soy tu patito. Como ves, alguien (tu), me ha vestido de rosa. Por cierto, feliz cumpleaños mi amor.',
+  pose: pose4,
+}
+
+/* Secuencia de frases del patito pequeño del menú.
+   La pose se alterna entre las lineas (pato -> pose 1 -> pose 2 -> pose 1...) */
+const CORNER_DIALOGUES: DuckDialogue[] = [
+  {
+    message: 'Como ves, te he preparado algo. No te preocupes es muy sencillo.',
+    pose: pose2,
+  },
+  {
+    message:
+      'Para poder acceder a los siguientes menus, tienes que completar un cuestionario.',
+    pose: pose1,
+  },
+  {
+    message:
+      'El cuestionario consta de 6 preguntas sobre mi, tienes que adivinar TODAS.',
+    pose: pose3,
+  },
+  {
+    message: '¿Estas lista mi amor? Cuando lo estes, pulsa el boton de cuestionario.',
+    pose: pose5,
+  },
+]
+
+/* Dialogo grande de "cuestionario completado" (se muestra una sola vez) */
+const COMPLETED_DIALOGUE: DuckDialogue = {
+  message:
+    'Muy bien mi vida, como veo has completado el cuestionario, ahora, puedes acceder a cualquier apartado del menu.',
+  pose: pato,
+}
 
 function LockIcon() {
   return (
@@ -50,12 +99,7 @@ export default function Home({
     !quizCompleted || showCompletionGreeting
   )
   const [showDuckCorner, setShowDuckCorner] = useState(false)
-  const [duckMessage, setDuckMessage] = useState(
-    quizCompleted
-      ? COMPLETED_MESSAGE
-      : 'Como ves, te he preparado algo. No te preocupes es muy sencillo.'
-  )
-  const [duckClickCount, setDuckClickCount] = useState(0)
+  const [dialogueIndex, setDialogueIndex] = useState(0)
 
   const closeOverlay = () => {
     setShowDuckOverlay(false)
@@ -70,29 +114,13 @@ export default function Home({
 
   const handleDuckClick = () => {
     if (quizCompleted) return
-
-    const messages = [
-      'Para poder acceder a los siguientes menus, tienes que completar un cuestionario.',
-      'El cuestionario consta de 6 preguntas sobre mi, tienes que adivinar TODAS.',
-      '¿Estas lista mi amor? Cuando lo estes, pulsa el boton de cuestionario.',
-    ]
-    if (duckClickCount < messages.length) {
-      setDuckMessage(messages[duckClickCount])
-      setDuckClickCount(duckClickCount + 1)
+    if (dialogueIndex < CORNER_DIALOGUES.length - 1) {
+      setDialogueIndex(dialogueIndex + 1)
     }
   }
 
-  /* Imagen del patito: la primera frase usa el pato normal y, en el resto,
-     se alternan las poses de habla (linea 1 -> pose 1, linea 2 -> pose 2,
-     linea 3 -> pose 1, linea 4 -> pose 2...). */
-  const currentLine = Math.max(0, duckClickCount - 1)
-  const duckCornerImage =
-    duckClickCount === 0 ? pato : currentLine % 2 === 0 ? pose1 : pose2
-  const duckCornerAlt = duckClickCount === 0 ? 'Patito rosa' : `Patito, pose ${currentLine % 2 ? 2 : 1}`
-
-  const overlayMessage = quizCompleted
-    ? COMPLETED_MESSAGE
-    : 'Hola, soy tu patito. Como ves, alguien (tu), me ha vestido de rosa. Por cierto, feliz cumpleaños mi amor.'
+  const cornerDialogue = CORNER_DIALOGUES[dialogueIndex]
+  const introDialogue = quizCompleted ? COMPLETED_DIALOGUE : INTRO_DIALOGUE
 
   useEffect(() => {
     // No auto-close, only on click
@@ -108,10 +136,14 @@ export default function Home({
         <div className="duck-overlay" onClick={closeOverlay}>
           <div className="duck-dialog" onClick={closeOverlay}>
             <div className="speech-bubble">
-              <p className="speech-bubble__text">{overlayMessage}</p>
+              <p className="speech-bubble__text">{introDialogue.message}</p>
               <p className="speech-bubble__name">Ivan, el novio mas guapo e inteligente del universo</p>
             </div>
-            <img src={pato} alt="Patito rosa" className="duck-image" />
+            <img
+              src={introDialogue.pose}
+              alt="Patito rosa"
+              className="duck-image"
+            />
           </div>
         </div>
       )}
@@ -119,12 +151,12 @@ export default function Home({
       {showDuckCorner && (
         <div className="duck-corner" onClick={handleDuckClick}>
           <img
-            src={duckCornerImage}
-            alt={duckCornerAlt}
+            src={cornerDialogue.pose}
+            alt="Patito"
             className="duck-corner__image"
           />
           <div className="speech-bubble speech-bubble--corner">
-            <p className="speech-bubble__text">{duckMessage}</p>
+            <p className="speech-bubble__text">{cornerDialogue.message}</p>
           </div>
         </div>
       )}
