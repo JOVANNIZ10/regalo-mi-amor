@@ -2,6 +2,16 @@ import { useEffect, useState } from 'react'
 import GlassButton from '../components/GlassButton'
 import beso from '../assets/images/patoChicoPoseBeso1.webp'
 import triste from '../assets/images/patoChicoPoseTriste1.webp'
+import victoriaAudio from '../assets/audios/audioFormularioVictoria.mp3'
+import derrotaAudio from '../assets/audios/audioFormularioDerrota.mp3'
+import { createDialogAudio } from '../utils/audio'
+import {
+  pauseBackgroundMusic,
+  resumeBackgroundMusic,
+  startQuizTicking,
+  stopQuizTicking,
+  playClickSfx,
+} from '../utils/audio'
 import './Quiz.css'
 
 /* ------------------------------------------------------------------
@@ -50,6 +60,30 @@ export default function Quiz({ onBack, onComplete }) {
   const [answers, setAnswers] = useState([])
   const [finished, setFinished] = useState(false)
 
+  /* En cuestionario la musica base se silencia y suena el tic-tac
+     de contrarreloj; al salir, todo vuelve a su sitio. */
+  useEffect(() => {
+    pauseBackgroundMusic()
+    startQuizTicking()
+    return () => {
+      stopQuizTicking()
+      resumeBackgroundMusic()
+    }
+  }, [])
+
+  /* Al terminar el cuestionario (pantalla de resultado) se detiene el
+     tic-tac y vuelve la musica normal. Si pulsa "Repetir", vuelve el
+     tic-tac. */
+  useEffect(() => {
+    if (finished) {
+      stopQuizTicking()
+      resumeBackgroundMusic()
+    } else {
+      pauseBackgroundMusic()
+      startQuizTicking()
+    }
+  }, [finished])
+
   const question = QUESTIONS[current]
   const total = QUESTIONS.length
   const progress = ((current + (selected !== null ? 1 : 0)) / total) * 100
@@ -67,6 +101,14 @@ export default function Quiz({ onBack, onComplete }) {
     if (current === total - 1) {
       setAnswers(updated)
       setFinished(true)
+
+      /* Victoria o derrota al terminar. Se lanza dentro del click, asi
+         el navegador permite el autoplay (viene de una interaccion). */
+      const perfectNow = QUESTIONS.every(
+        (item, index) => item.options[updated[index]] === item.correct
+      )
+      const audio = createDialogAudio(perfectNow ? victoriaAudio : derrotaAudio)
+      audio.play().catch(() => {})
       return
     }
 
@@ -111,7 +153,7 @@ export default function Quiz({ onBack, onComplete }) {
             </p>
             <p className="quiz__duck-text">
               {perfect
-                ? 'Muy bieeeeen amore mio, te quiero y te amo con todo, dame un bestito.'
+                ? 'Muy bieeeeen amore mio, te quiero y te amo con todo, dame un besito.'
                 : 'Mi vida, preciosidad de mi alma. ¿No me conoces? Hazlo otra vez por favor.'}
             </p>
           </div>
@@ -144,7 +186,10 @@ export default function Quiz({ onBack, onComplete }) {
             <button
               type="button"
               className="quiz__back"
-              onClick={onBack}
+              onClick={() => {
+                playClickSfx();
+                onBack();
+              }}
               aria-label="Volver al menú"
             >
               <svg
@@ -179,7 +224,10 @@ export default function Quiz({ onBack, onComplete }) {
                 className={
                   "quiz__option" + (selected === index ? " quiz__option--selected" : "")
                 }
-                onClick={() => choose(index)}
+                onClick={() => {
+                  playClickSfx();
+                  choose(index);
+                }}
                 aria-pressed={selected === index}
               >
                 <span className="quiz__option-letter">

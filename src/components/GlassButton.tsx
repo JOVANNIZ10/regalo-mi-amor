@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { playClickSfx } from "../utils/audio";
 import "./GlassButton.css";
 
 export type GlassButtonVariant = "default" | "accent" | "ghost";
@@ -18,7 +19,7 @@ export interface GlassButtonProps extends ButtonHTMLAttributes<HTMLButtonElement
  */
 const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(
   function GlassButton(
-    { variant = "default", size = "md", icon, className, children, type = "button", ...props },
+    { variant = "default", size = "md", icon, className, children, type = "button", onClick, ...props },
     ref
   ) {
     const classes = [
@@ -32,7 +33,16 @@ const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(
       .join(" ");
 
     return (
-      <button ref={ref} type={type} className={classes} {...props}>
+      <button
+        ref={ref}
+        type={type}
+        className={classes}
+        onClick={(event) => {
+          playClickSfx();
+          onClick?.(event);
+        }}
+        {...props}
+      >
         {icon && (
           <span className="glass-btn__icon" aria-hidden="true">
             {icon}

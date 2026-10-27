@@ -1,13 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import GlassButton from '../components/GlassButton'
 import foto from '../assets/images/foto.jpg'
 import pato from '../assets/images/pato.webp'
+import inicioAudio from '../assets/audios/inicioAudio1.mp3'
+import inicioAudio2 from '../assets/audios/inicioAudio2.mp3'
+import inicioAudio3 from '../assets/audios/inicioAudio3.mp3'
+import inicioAudio4 from '../assets/audios/inicioAudio4.mp3'
+import inicioAudio5 from '../assets/audios/inicioAudio5.mp3'
+import { createDialogAudio } from '../utils/audio'
 import pose1 from '../assets/images/patoChicoPoseHablando1.webp'
 import pose2 from '../assets/images/patoChicoPoseHablando2.webp'
 import pose3 from '../assets/images/patoChicoPoseDedos1.webp'
 import pose4 from '../assets/images/patoChicoPosecelebrando1.webp'
 import pose5 from '../assets/images/patoChicoPoseOkey1.webp'
-import pose6 from '../assets/images/patoChicoPoseBeso1.webp'
+import pose6 from '../assets/images/patoChicoPoseTumbado1.webp'
 
 
 
@@ -31,6 +37,8 @@ export interface HomeProps {
 interface DuckDialogue {
   message: string
   pose: string
+  /** audio que suena con la linea; mientras dure, el dialogo se bloquea */
+  audio?: string
 }
 
 /* Dialogo grande del patito al entrar (con la firma) */
@@ -46,20 +54,24 @@ const CORNER_DIALOGUES: DuckDialogue[] = [
   {
     message: 'Como ves, te he preparado algo. No te preocupes es muy sencillo.',
     pose: pose2,
+    audio: inicioAudio2,
   },
   {
     message:
       'Para poder acceder a los siguientes menus, tienes que completar un cuestionario.',
     pose: pose1,
+    audio: inicioAudio3,
   },
   {
     message:
       'El cuestionario consta de 6 preguntas sobre mi, tienes que adivinar TODAS.',
     pose: pose3,
+    audio: inicioAudio4,
   },
   {
     message: '¿Estas lista mi amor? Cuando lo estes, pulsa el boton de cuestionario.',
     pose: pose5,
+    audio: inicioAudio5,
   },
 ]
 
@@ -87,6 +99,74 @@ function LockIcon() {
   )
 }
 
+/* ------------------------------------------------------------------
+   Hook de audio de dialogo. Reproduce `src` en cuanto `active` pasa a
+   true, intentandolo de forma automatica. Chrome/Safari pueden bloquear
+   el autoplay sin ninguna interaccion previa (norma anti-publicidad);
+   en ese caso se reintenta en la primera interaccion de CUALQUIER tipo
+   (toca la pantalla, click, tecla...) sin que haga falta un click extra.
+
+   NO bloquea el avanzar del dialogo por defecto: si un dialogo concreto
+   quiere bloquearse hasta que su audio acabe (p.ej. el de entrada), su
+   componente lo consulta con `finished`.
+------------------------------------------------------------------ */
+function useDialogueAudio(src: string, active: boolean) {
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [finished, setFinished] = useState(false)
+
+  useEffect(() => {
+    if (!active) return
+
+    setFinished(false)
+
+    const audio = createDialogAudio(src)
+    audioRef.current = audio
+    audio.addEventListener('ended', () => setFinished(true))
+    audio.addEventListener('error', () => setFinished(true))
+
+    /* limpieza de los reintentos cuando el audio ya esta sonando */
+    const stopRetry = () => {
+      window.removeEventListener('pointerdown', tryPlay)
+      window.removeEventListener('touchstart', tryPlay)
+      window.removeEventListener('keydown', tryPlay)
+    }
+
+    const tryPlay = () => {
+      if (audio.paused && !audio.ended) {
+        audio.currentTime = 0
+        audio.play().then(stopRetry).catch(() => {})
+      }
+    }
+
+    /* intento 1: automatico */
+    tryPlay()
+
+    /* intentos 2+: primera interaccion de cualquier tipo */
+    window.addEventListener('pointerdown', tryPlay)
+    window.addEventListener('touchstart', tryPlay)
+    window.addEventListener('keydown', tryPlay)
+
+    return () => {
+      audio.pause()
+      audioRef.current = null
+      stopRetry()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, src])
+
+  return {
+    finished,
+    /* arranca el audio manual (p.ej. al click) si el autoplay fallo */
+    playIfPaused: () => {
+      const audio = audioRef.current
+      if (audio?.paused) {
+        audio.currentTime = 0
+        audio.play().catch(() => {})
+      }
+    },
+  }
+}
+
 export default function Home({
   onStartQuiz,
   onOpenLetter,
@@ -103,7 +183,24 @@ export default function Home({
   const [showDuckCorner, setShowDuckCorner] = useState(false)
   const [dialogueIndex, setDialogueIndex] = useState(0)
 
+  /* Audio del dialogo de entrada: se para al cerrar el overlay.
+     El dialogo de entrada SI se bloquea hasta que su audio acaba */
+  const introAudio = useDialogueAudio(inicioAudio, !quizCompleted && showDuckOverlay)
+  /* Cada linea de la esquina tiene su propio audio (inicioAudio2..5):
+     se reproduce automaticamente y se puede pasar libremente */
+  useDialogueAudio(
+    CORNER_DIALOGUES[dialogueIndex].audio ?? inicioAudio2,
+    showDuckCorner
+  )
+
   const closeOverlay = () => {
+    if (!quizCompleted && !introAudio.finished) {
+      /* el audio de entrada sigue sonando: no se puede pasar aun.
+         Aprovechamos el click para arrancarlo si el autoplay fallo. */
+      introAudio.playIfPaused()
+      return
+    }
+
     setShowDuckOverlay(false)
 
     if (quizCompleted) {
@@ -123,6 +220,11 @@ export default function Home({
 
   const cornerDialogue = CORNER_DIALOGUES[dialogueIndex]
   const introDialogue = quizCompleted ? COMPLETED_DIALOGUE : INTRO_DIALOGUE
+
+  /* El cuestionario solo se puede pulsar cuando el patito ha acabado
+     su secuencia de dialogo (o cuando el cuestionario ya esta hecho). */
+  const dialogueFinished = dialogueIndex === CORNER_DIALOGUES.length - 1
+  const quizReady = quizCompleted || dialogueFinished
 
   useEffect(() => {
     // No auto-close, only on click
@@ -166,7 +268,13 @@ export default function Home({
       <div className="home__content">
         <img src={foto} alt="Foto" className="home__photo" />
         <div className="home__buttons">
-          <GlassButton size="lg" onClick={onStartQuiz}>
+          <GlassButton
+            size="lg"
+            disabled={!quizReady}
+            title={!quizReady ? 'Escucha al patito hasta el final' : undefined}
+            className={!quizCompleted && quizReady ? 'glass-btn--glow' : undefined}
+            onClick={onStartQuiz}
+          >
             Cuestionario
           </GlassButton>
           <GlassButton

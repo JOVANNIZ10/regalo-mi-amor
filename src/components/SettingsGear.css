@@ -1,0 +1,96 @@
+/* Ruedita de ajustes: boton fijo en la esquina superior derecha */
+.settings-gear {
+  position: fixed;
+  top: 0.75rem;
+  right: 0.75rem;
+  right: calc(0.75rem + env(safe-area-inset-right, 0px));
+  z-index: 1100; /* por encima de los overlays de dialogo */
+}
+
+.settings-gear__button {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-1);
+  cursor: pointer;
+  border: 0;
+  padding: 0;
+  transition: transform 0.2s ease;
+}
+
+.settings-gear__button:hover {
+  transform: rotate(30deg);
+}
+
+.settings-gear__button svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Panel de ajustes, debajo de la ruedita */
+.settings-gear__panel {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  min-width: 15rem;
+  padding: 1rem 1.1rem;
+  border-radius: 1rem;
+  animation: settings-panel-in 0.2s ease;
+}
+
+@keyframes settings-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.settings-gear__title {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.settings-gear__row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.35rem 0;
+}
+
+.settings-gear__label {
+  flex: 0 0 4.5rem;
+  font-size: 0.85rem;
+  color: var(--text-1);
+}
+
+.settings-gear__value {
+  flex: 0 0 3ch;
+  text-align: right;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.95);
+  font-variant-numeric: tabular-nums;
+}
+
+.settings-gear__row input[type='range'] {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--accent-400);
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-gear__panel,
+  .settings-gear__button {
+    animation: none;
+    transition: none;
+  }
+}

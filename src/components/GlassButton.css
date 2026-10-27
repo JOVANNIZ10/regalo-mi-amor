@@ -68,6 +68,23 @@
   outline-offset: 3px;
 }
 
+/* ---------- Brillo de "pulsa esto" ---------- */
+.glass-btn--glow {
+  animation: glass-btn-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes glass-btn-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 10px 2px hsl(from var(--accent-400) h s l / 0.45);
+  }
+  50% {
+    box-shadow:
+      0 0 26px 8px hsl(from var(--accent-400) h s l / 0.8),
+      0 0 8px 1px hsl(from var(--accent-400) h s l / 0.9);
+  }
+}
+
 .glass-btn:disabled {
   cursor: not-allowed;
   opacity: 0.45;

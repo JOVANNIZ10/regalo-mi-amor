@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import GlassButton from '../components/GlassButton'
-import pato from '../assets/images/pato.webp'
+import pato from '../assets/images/patoChicoPoseCarta1.webp'
 import './Letter.css'
 
 export default function Letter({ onBack }) {
