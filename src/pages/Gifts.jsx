@@ -109,6 +109,9 @@ const PAPER_COLORS = ['#ffd479', '#8fd0e8', '#c9a0e8', '#ff9a9a']
    regalo, y luego sale por la puerta / verja. En el ultimo nivel no
    hay salida: hay que abrir la jaula del patito.
 ------------------------------------------------------------------ */
+/* Volumen real de la musica de fondo (nodo de ganancia de Web Audio) */
+const MUSIC_VOLUME = 0.05
+
 const GIFTS = [
   { name: 'Patito de peluche', image: regalo1 },
   { name: 'Pollito de peluche', image: regalo2 },
@@ -1020,6 +1023,7 @@ export default function Gifts({ onBack }) {
   const joyKnobRef = useRef(null)
   const pausedRef = useRef(false)
   const musicRef = useRef(null)
+  const musicCtxRef = useRef(null)
   const phaseRef = useRef('intro')
   const viewRef = useRef({ scale: 0.7, vw: 1280, vh: 900, safeTop: 104, safeH: 678 })
 
@@ -1058,8 +1062,30 @@ export default function Gifts({ onBack }) {
   useEffect(() => {
     const audio = new Audio(musicaTensionRegalo)
     audio.loop = true
-    audio.volume = 0.08
+    audio.volume = 1
     musicRef.current = audio
+
+    /* En iPhone/Safari el volumen del elemento no se puede cambiar
+       (es de solo lectura), asi que la musica pasa por un nodo de
+       ganancia de Web Audio para poder bajarla de verdad. */
+    let ctx = null
+    let gain = null
+    try {
+      const Ctx = window.AudioContext ?? window.webkitAudioContext
+      if (Ctx) {
+        ctx = new Ctx()
+        const source = ctx.createMediaElementSource(audio)
+        gain = ctx.createGain()
+        gain.gain.value = MUSIC_VOLUME
+        source.connect(gain).connect(ctx.destination)
+        musicCtxRef.current = ctx
+      }
+    } catch {
+      ctx = null
+      gain = null
+    }
+    /* Navegador sin Web Audio: al menos el volumen normal. */
+    if (!gain) audio.volume = MUSIC_VOLUME
 
     let bound = true
     const unbind = () => {
@@ -1069,6 +1095,11 @@ export default function Gifts({ onBack }) {
       window.removeEventListener('keydown', startMusic)
     }
     const startMusic = () => {
+      try {
+        ctx?.resume()?.catch?.(() => {})
+      } catch {
+        /* contexto no disponible */
+      }
       if (phaseRef.current === 'done') return
       if (!audio.paused) {
         unbind()
@@ -1088,6 +1119,12 @@ export default function Gifts({ onBack }) {
       unbind()
       audio.pause()
       musicRef.current = null
+      musicCtxRef.current = null
+      try {
+        ctx?.close()?.catch?.(() => {})
+      } catch {
+        /* el contexto ya estaba cerrado */
+      }
     }
   }, [])
 
@@ -1099,6 +1136,12 @@ export default function Gifts({ onBack }) {
       audio.pause()
       audio.currentTime = 0
     } else {
+      const ctx = musicCtxRef.current
+      try {
+        ctx?.resume()?.catch?.(() => {})
+      } catch {
+        /* contexto no disponible */
+      }
       audio.play().catch(() => {})
     }
   }, [phase])
@@ -1577,6 +1620,11 @@ export default function Gifts({ onBack }) {
   const closeGiftOverlay = () => {
     setGiftOverlay(null)
     setPhase('room')
+  }
+
+  const closeReward = () => {
+    if (phase === 'gift') closeGiftOverlay()
+    setKeyOverlay(false)
   }
 
   const handleExit = () => {
@@ -2537,44 +2585,47 @@ export default function Gifts({ onBack }) {
         </div>
       )}
 
-      {/* Overlay del regalo encontrado */}
-      {phase === 'gift' && giftOverlay && (
-        <div className="gifts-overlay" onClick={closeGiftOverlay}>
-          <div className="gifts-overlay__dialog">
-            <div className="gifts-overlay__bubble">
-              <p className="gifts-overlay__text">
-                ¡Has encontrado {giftOverlay.name}!
-              </p>
-              <p className="gifts-overlay__name">Guardado en tu mochila</p>
-              <p className="gifts-overlay__hint">Toca para seguir buscando</p>
-            </div>
+      {/* Recompensa conseguida: regalo o llave */}
+      {((phase === 'gift' && giftOverlay) || keyOverlay) && (
+        <div className="gifts-reward-overlay" onClick={closeReward}>
+          <div
+            className="gifts-reward glass"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <p className="gifts-reward__eyebrow">
+              {giftOverlay ? 'Regalo conseguido' : 'Llave conseguida'}
+            </p>
 
-            <div className="gifts-gift">
-              <span className="gifts-gift__visual">
+            <span
+              className={`gifts-reward__visual${
+                giftOverlay ? '' : ' gifts-reward__visual--key'
+              }`}
+            >
+              {giftOverlay ? (
                 <img src={giftOverlay.image} alt={giftOverlay.name} />
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Aviso de llave conseguida (como el de los regalos) */}
-      {phase === 'room' && keyOverlay && (
-        <div className="gifts-overlay" onClick={() => setKeyOverlay(false)}>
-          <div className="gifts-overlay__dialog">
-            <div className="gifts-overlay__bubble">
-              <p className="gifts-overlay__text">¡Has conseguido la llave!</p>
-              <p className="gifts-overlay__name">
-                Llave del nivel {levelIndex + 1}
-              </p>
-              <p className="gifts-overlay__hint">Toca para seguir buscando</p>
-            </div>
-
-            <div className="gifts-gift gifts-gift--key">
-              <span className="gifts-gift__visual">
+              ) : (
                 <KeyIcon />
-              </span>
-            </div>
+              )}
+            </span>
+
+            <h3 className="gifts-reward__title">
+              {giftOverlay
+                ? giftOverlay.name
+                : `Llave del nivel ${levelIndex + 1}`}
+            </h3>
+            <p className="gifts-reward__subtitle">
+              {giftOverlay
+                ? 'Guardado en tu mochila'
+                : 'Abre la salida del nivel'}
+            </p>
+
+            <button
+              type="button"
+              className="gifts-reward__btn"
+              onClick={closeReward}
+            >
+              Continuar
+            </button>
           </div>
         </div>
       )}

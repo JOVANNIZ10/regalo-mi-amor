@@ -129,14 +129,13 @@ export default function Home({
 
   /* Al volver del cuestionario con todo bien, suena la felicitacion
      (inicioAudio6) junto al saludo de "cuestionario completado".
-     Se reproduce una sola vez y no se corta si se cierra el saludo. */
-  const completionAudioPlayed = useRef(false)
+     Se reproduce una sola vez y se corta al cerrar el saludo. */
+  const completionAudioRef = useRef<HTMLAudioElement | null>(null)
   useEffect(() => {
-    if (!quizCompleted || !showCompletionGreeting) return
-    if (completionAudioPlayed.current) return
-    completionAudioPlayed.current = true
+    if (!quizCompleted || !showCompletionGreeting) return undefined
 
     const audio = createDialogAudio(inicioAudio6)
+    completionAudioRef.current = audio
 
     const stopRetry = () => {
       window.removeEventListener('pointerdown', tryPlay)
@@ -155,6 +154,21 @@ export default function Home({
     window.addEventListener('keydown', tryPlay)
     audio.addEventListener('ended', stopRetry)
     audio.addEventListener('error', stopRetry)
+
+    /* Al cerrar el saludo se corta la felicitacion: no debe seguir
+       sonando por detras al volver al menu. */
+    return () => {
+      stopRetry()
+      audio.pause()
+      try {
+        audio.currentTime = 0
+      } catch {
+        /* si el navegador no deja rebobinar, al menos queda parado */
+      }
+      if (completionAudioRef.current === audio) {
+        completionAudioRef.current = null
+      }
+    }
   }, [quizCompleted, showCompletionGreeting])
 
   const closeOverlay = () => {
@@ -168,6 +182,16 @@ export default function Home({
     setShowDuckOverlay(false)
 
     if (quizCompleted) {
+      const audio = completionAudioRef.current
+      if (audio) {
+        audio.pause()
+        try {
+          audio.currentTime = 0
+        } catch {
+          /* el audio queda parado igualmente */
+        }
+        completionAudioRef.current = null
+      }
       onCompletionGreetingShown?.()
       return
     }
