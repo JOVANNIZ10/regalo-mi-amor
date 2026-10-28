@@ -6,11 +6,10 @@ import victoriaAudio from '../assets/audios/audioFormularioVictoria.mp3'
 import derrotaAudio from '../assets/audios/audioFormularioDerrota.mp3'
 import { createDialogAudio } from '../utils/audio'
 import {
-  pauseBackgroundMusic,
-  resumeBackgroundMusic,
   startQuizTicking,
   stopQuizTicking,
   playClickSfx,
+  stopDialogAudios,
 } from '../utils/audio'
 import './Quiz.css'
 
@@ -60,28 +59,23 @@ export default function Quiz({ onBack, onComplete }) {
   const [answers, setAnswers] = useState([])
   const [finished, setFinished] = useState(false)
 
-  /* En cuestionario la musica base se silencia y suena el tic-tac
-     de contrarreloj; al salir, todo vuelve a su sitio. */
+  /* Tic-tac de contrarreloj mientras se responde el cuestionario.
+     Al salir, se para el tic-tac y cualquier voz en curso (victoria/
+     derrota) para que no se solape con el audio del menu. */
   useEffect(() => {
-    pauseBackgroundMusic()
+    stopDialogAudios() /* corta voces que vengan de otra seccion */
     startQuizTicking()
     return () => {
       stopQuizTicking()
-      resumeBackgroundMusic()
+      stopDialogAudios()
     }
   }, [])
 
-  /* Al terminar el cuestionario (pantalla de resultado) se detiene el
-     tic-tac y vuelve la musica normal. Si pulsa "Repetir", vuelve el
-     tic-tac. */
+  /* Al terminar (pantalla de resultado) se para el tic-tac.
+     Si pulsa "Repetir", vuelve a sonar. */
   useEffect(() => {
-    if (finished) {
-      stopQuizTicking()
-      resumeBackgroundMusic()
-    } else {
-      pauseBackgroundMusic()
-      startQuizTicking()
-    }
+    if (finished) stopQuizTicking()
+    else startQuizTicking()
   }, [finished])
 
   const question = QUESTIONS[current]

@@ -7,7 +7,9 @@ import inicioAudio2 from '../assets/audios/inicioAudio2.mp3'
 import inicioAudio3 from '../assets/audios/inicioAudio3.mp3'
 import inicioAudio4 from '../assets/audios/inicioAudio4.mp3'
 import inicioAudio5 from '../assets/audios/inicioAudio5.mp3'
+import inicioAudio6 from '../assets/audios/inicioAudio6.mp3'
 import { createDialogAudio } from '../utils/audio'
+import { useDialogueAudio } from '../utils/useDialogueAudio'
 import pose1 from '../assets/images/patoChicoPoseHablando1.webp'
 import pose2 from '../assets/images/patoChicoPoseHablando2.webp'
 import pose3 from '../assets/images/patoChicoPoseDedos1.webp'
@@ -99,74 +101,6 @@ function LockIcon() {
   )
 }
 
-/* ------------------------------------------------------------------
-   Hook de audio de dialogo. Reproduce `src` en cuanto `active` pasa a
-   true, intentandolo de forma automatica. Chrome/Safari pueden bloquear
-   el autoplay sin ninguna interaccion previa (norma anti-publicidad);
-   en ese caso se reintenta en la primera interaccion de CUALQUIER tipo
-   (toca la pantalla, click, tecla...) sin que haga falta un click extra.
-
-   NO bloquea el avanzar del dialogo por defecto: si un dialogo concreto
-   quiere bloquearse hasta que su audio acabe (p.ej. el de entrada), su
-   componente lo consulta con `finished`.
------------------------------------------------------------------- */
-function useDialogueAudio(src: string, active: boolean) {
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-  const [finished, setFinished] = useState(false)
-
-  useEffect(() => {
-    if (!active) return
-
-    setFinished(false)
-
-    const audio = createDialogAudio(src)
-    audioRef.current = audio
-    audio.addEventListener('ended', () => setFinished(true))
-    audio.addEventListener('error', () => setFinished(true))
-
-    /* limpieza de los reintentos cuando el audio ya esta sonando */
-    const stopRetry = () => {
-      window.removeEventListener('pointerdown', tryPlay)
-      window.removeEventListener('touchstart', tryPlay)
-      window.removeEventListener('keydown', tryPlay)
-    }
-
-    const tryPlay = () => {
-      if (audio.paused && !audio.ended) {
-        audio.currentTime = 0
-        audio.play().then(stopRetry).catch(() => {})
-      }
-    }
-
-    /* intento 1: automatico */
-    tryPlay()
-
-    /* intentos 2+: primera interaccion de cualquier tipo */
-    window.addEventListener('pointerdown', tryPlay)
-    window.addEventListener('touchstart', tryPlay)
-    window.addEventListener('keydown', tryPlay)
-
-    return () => {
-      audio.pause()
-      audioRef.current = null
-      stopRetry()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, src])
-
-  return {
-    finished,
-    /* arranca el audio manual (p.ej. al click) si el autoplay fallo */
-    playIfPaused: () => {
-      const audio = audioRef.current
-      if (audio?.paused) {
-        audio.currentTime = 0
-        audio.play().catch(() => {})
-      }
-    },
-  }
-}
-
 export default function Home({
   onStartQuiz,
   onOpenLetter,
@@ -192,6 +126,36 @@ export default function Home({
     CORNER_DIALOGUES[dialogueIndex].audio ?? inicioAudio2,
     showDuckCorner
   )
+
+  /* Al volver del cuestionario con todo bien, suena la felicitacion
+     (inicioAudio6) junto al saludo de "cuestionario completado".
+     Se reproduce una sola vez y no se corta si se cierra el saludo. */
+  const completionAudioPlayed = useRef(false)
+  useEffect(() => {
+    if (!quizCompleted || !showCompletionGreeting) return
+    if (completionAudioPlayed.current) return
+    completionAudioPlayed.current = true
+
+    const audio = createDialogAudio(inicioAudio6)
+
+    const stopRetry = () => {
+      window.removeEventListener('pointerdown', tryPlay)
+      window.removeEventListener('touchstart', tryPlay)
+      window.removeEventListener('keydown', tryPlay)
+    }
+    const tryPlay = () => {
+      if (audio.paused && !audio.ended) {
+        audio.play().then(stopRetry).catch(() => {})
+      }
+    }
+
+    tryPlay()
+    window.addEventListener('pointerdown', tryPlay)
+    window.addEventListener('touchstart', tryPlay)
+    window.addEventListener('keydown', tryPlay)
+    audio.addEventListener('ended', stopRetry)
+    audio.addEventListener('error', stopRetry)
+  }, [quizCompleted, showCompletionGreeting])
 
   const closeOverlay = () => {
     if (!quizCompleted && !introAudio.finished) {

@@ -1,21 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import Home from './pages/Home'
 import Quiz from './pages/Quiz'
 import Letter from './pages/Letter'
 import Gifts from './pages/Gifts'
-import { initBackgroundMusic } from './utils/audio'
-import SettingsGear from './components/SettingsGear'
 
 export default function App() {
   const [page, setPage] = useState('home')
   const [quizCompleted, setQuizCompleted] = useState(false)
   const [completionGreetingPending, setCompletionGreetingPending] = useState(false)
-
-  /* Musica de ambiente en bucle, siempre sonando por debajo de todo
-     (vive en App para no reiniciarse al cambiar de seccion). */
-  useEffect(() => {
-    initBackgroundMusic()
-  }, [])
 
   const handleQuizComplete = () => {
     setQuizCompleted(true)
@@ -50,11 +42,5 @@ export default function App() {
     )
   }
 
-  /* La ruedita de ajustes vive por encima de cualquier seccion */
-  return (
-    <>
-      <SettingsGear />
-      {pageContent}
-    </>
-  )
+  return pageContent
 }

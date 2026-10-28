@@ -1,168 +1,13 @@
 /* ------------------------------------------------------------------
    Modulo central de audio.
 
-   - Musica de ambiente de fondo (bucle, todas las secciones),
-     con pausa/reanudacion para secciones que llevan su propia pista
-     (p.ej. el cuestionario de contrarreloj).
-   - Tic-tac de contrarreloj para el cuestionario (sintetizado,
-     sin archivos: Web Audio API).
-   - Efecto "pop" para los clicks de boton (tambien sintetizado).
+   - Audios de dialogo: voces de los patitos, victoria/derrota, con su
+     propio volumen (ruedita de ajustes).
+   - Tic-tac de contrarreloj para el cuestionario (sintetizado).
+   - Efecto "tap" para los clicks de boton (sintetizado).
 
-   El audio con sonido no puede arrancar sin una interaccion del
-   usuario (norma de los navegadores): aqui se intenta al momento
-   y, si se bloquea, en la primera interaccion de cualquier tipo.
+   Sin musica de fondo.
 ------------------------------------------------------------------ */
-
-/* ---------- Musica de fondo ---------- */
-import bgMusicOgg from '../assets/audios/musicaAmbienteInazuma.ogg'
-import bgMusicMp3 from '../assets/audios/musicaAmbienteInazuma64.mp3'
-
-/* ¿Dispositivo movil? (para arrancar el sonido mas bajo ahi) */
-export function isMobileDevice() {
-  try {
-    return (
-      window.matchMedia('(pointer: coarse)').matches ||
-      /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
-    )
-  } catch {
-    return false
-  }
-}
-
-/* Volumen de la musica de fondo (0 a 1), ajustable desde la ruedita.
-   En movil arranca al 5% y en escritorio al 15%. */
-const DEFAULT_MUSIC_VOLUME = isMobileDevice() ? 0.05 : 0.15
-let bgVolume = DEFAULT_MUSIC_VOLUME
-
-let bgAudio = null
-let bgPausedByPage = false
-let bgInitialized = false
-
-/* En iPhone/Safari el volumen de un <audio> es de solo lectura (lo manda
-   el boton fisico del telefono). Para que el slider funcione en movil la
-   musica pasa por un GainNode de Web Audio, que si se puede ajustar. */
-let bgCtx = null
-let bgGain = null
-let bgSource = null
-let bgSourceAudio = null
-
-function connectBgGain(audio) {
-  const Ctx = window.AudioContext ?? window.webkitAudioContext
-  if (!Ctx) return
-
-  if (!bgCtx) bgCtx = new Ctx()
-  bgCtx.resume().catch(() => {})
-
-  if (!bgGain) {
-    bgGain = bgCtx.createGain()
-    bgGain.connect(bgCtx.destination)
-  }
-
-  /* createMediaElementSource solo puede llamarse UNA vez por elemento:
-     solo se crea si aun no hay fuente o si cambio el elemento (fallback) */
-  if (bgSourceAudio !== audio) {
-    try {
-      if (bgSource) bgSource.disconnect()
-      bgSource = bgCtx.createMediaElementSource(audio)
-      bgSource.connect(bgGain)
-      bgSourceAudio = audio
-    } catch {
-      /* sin Web Audio: se queda con el volumen del elemento */
-      bgSource = null
-      bgSourceAudio = null
-    }
-  }
-
-  if (bgSource) {
-    /* a partir de aqui el volumen lo manda el gain, no el elemento */
-    audio.volume = 1
-    bgGain.gain.value = bgVolume
-  }
-}
-
-export function getMusicVolume() {
-  return bgVolume
-}
-
-/**
- * Ajusta el volumen de la musica de fondo en caliente.
- * `fromUserGesture` debe ser true cuando se llama desde un click/gesto:
- * es cuando el navegador permite crear/reanudar el contexto de audio
- * (imprescindible en movil).
- */
-export function setMusicVolume(volume, fromUserGesture = false) {
-  bgVolume = Math.min(1, Math.max(0, volume))
-
-  if (fromUserGesture && bgAudio) connectBgGain(bgAudio)
-
-  if (bgGain) bgGain.gain.value = bgVolume
-  else if (bgAudio) bgAudio.volume = bgVolume
-}
-
-function startBgAudio(src) {
-  const audio = new Audio(src)
-  audio.loop = true
-  audio.volume = bgGain ? 1 : bgVolume
-  audio.addEventListener('error', () => {
-    /* navegador sin soporte ogg/opus -> cambia al mp3 */
-    if (src !== bgMusicMp3) {
-      const fallback = new Audio(bgMusicMp3)
-      fallback.loop = true
-      fallback.volume = bgGain ? 1 : bgVolume
-      if (bgAudio === audio) {
-        bgAudio = fallback
-        /* si el grafico de volumen estaba activo, se reconstruye */
-        if (bgCtx) connectBgGain(fallback)
-      }
-      /* si ya estaba sonando (cambio a mitad de sesion) lo arranca */
-      if (!bgPausedByPage) fallback.play().catch(() => {})
-    }
-  })
-  return audio
-}
-
-export function initBackgroundMusic() {
-  if (bgInitialized) return
-  bgInitialized = true
-
-  bgAudio = startBgAudio(bgMusicOgg)
-
-  const tryPlay = () => {
-    if (!bgPausedByPage && bgAudio && bgAudio.paused) {
-      bgAudio.play().catch(() => {})
-    }
-  }
-
-  /* Al primer gesto se conecta la musica al GainNode de Web Audio
-     (necesario para que el volumen se pueda cambiar en movil).
-     Se registra ANTES que el play para que el grafico ya exista. */
-  const unlockGraph = () => {
-    if (bgAudio) connectBgGain(bgAudio)
-  }
-  window.addEventListener('pointerdown', unlockGraph, { once: true })
-  window.addEventListener('touchstart', unlockGraph, { once: true })
-  window.addEventListener('keydown', unlockGraph, { once: true })
-
-  /* intento automatico (en escritorio suele sonar sin tocar nada) */
-  tryPlay()
-
-  /* reintento con la primera interaccion de cualquier tipo */
-  window.addEventListener('pointerdown', tryPlay)
-  window.addEventListener('touchstart', tryPlay)
-  window.addEventListener('keydown', tryPlay)
-}
-
-/** La pagina actual lleva su propia pista: silencia el fondo */
-export function pauseBackgroundMusic() {
-  bgPausedByPage = true
-  bgAudio?.pause()
-}
-
-/** La pagina sale: el fondo vuelve */
-export function resumeBackgroundMusic() {
-  bgPausedByPage = false
-  if (bgAudio) bgAudio.play().catch(() => {})
-}
 
 /* ---------- Volumen de los audios de dialogo (voces, victoria...) ---------- */
 let dialogueVolume = 1
@@ -184,9 +29,9 @@ export function setDialogueVolume(volume) {
 }
 
 /**
- * Crea un Audio de dialogo (voces de los patitos, victoria...) con el
- * volumen configurado y registrado, para que la ruedita lo ajuste
- * incluso mientras suena. Se quita del registro al acabar/error.
+ * Crea un Audio de dialogo con el volumen configurado y registrado,
+ * para que la ruedita lo ajuste incluso mientras suena.
+ * Se quita del registro al acabar/error.
  */
 export function createDialogAudio(src) {
   const audio = new Audio(src)
@@ -196,6 +41,22 @@ export function createDialogAudio(src) {
   audio.addEventListener('ended', unregister)
   audio.addEventListener('error', unregister)
   return audio
+}
+
+/**
+ * Corta todas las voces que esten sonando ahora mismo.
+ * Se usa al salir de una seccion para que no se solapen con el
+ * audio de la seccion siguiente.
+ */
+export function stopDialogAudios() {
+  for (const audio of activeDialogAudios) {
+    audio.pause()
+    try {
+      audio.currentTime = 0
+    } catch {
+      /* da igual si el navegador no deja rebobinarlo */
+    }
+  }
 }
 
 /* ---------- Contexto Web Audio (sintetizados) ---------- */
@@ -234,7 +95,7 @@ export function playClickSfx() {
 }
 
 /* ---------- Tic-tac de contrarreloj para el cuestionario ---------- */
-const TICK_PERIOD_MS = 530 /* un tic y un tac alternate */
+const TICK_PERIOD_MS = 530 /* un tic y un tac alternados */
 
 let tickInterval = null
 
