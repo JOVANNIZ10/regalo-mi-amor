@@ -634,7 +634,7 @@
 /* Estado de la sala */
 .gifts-hud__status {
   position: absolute;
-  top: 4.6rem;
+  top: 1.15rem;
   left: 50%;
   z-index: 20;
   display: flex;
@@ -1238,14 +1238,12 @@
   }
 
   .gifts-hud__status {
-    top: 4.1rem;
+    top: 1rem;
   }
 
   .gifts-hud__bottom {
     grid-template-columns: auto 1fr;
-    grid-template-areas:
-      'dialog dialog'
-      'joystick action';
+    grid-template-areas: 'joystick action';
     gap: 0.45rem;
     padding: 0.7rem;
   }
@@ -1306,17 +1304,6 @@
 
   .gifts-rtouch:disabled {
     cursor: default;
-  }
-
-  .gifts-dialog {
-    grid-area: dialog;
-    width: 100%;
-    max-width: none;
-    padding: 0.5rem 0.7rem;
-  }
-
-  .gifts-dialog__text {
-    font-size: 0.78rem;
   }
 
   .gifts-hud__action {
@@ -1447,5 +1434,144 @@
 
   .gifts-overlay__text {
     font-size: 0.92rem;
+  }
+}
+
+
+/* ---------- Instrucciones antes de empezar ---------- */
+.gifts-guide {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: rgba(0, 0, 0, 0.62);
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+  animation: giftsFade 0.3s ease;
+}
+
+.gifts-guide__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  width: min(430px, 92vw);
+  padding: 1.8rem 1.5rem;
+  text-align: center;
+  border-radius: 22px;
+  animation: giftsRise 0.35s ease;
+}
+
+.gifts-guide__avatar {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 24px rgba(255, 158, 203, 0.45));
+}
+
+.gifts-guide__step {
+  margin: 0;
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.gifts-guide__text {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text-1);
+}
+
+.gifts-guide__hint {
+  margin: 0.2rem 0 0;
+  font-size: 0.72rem;
+  font-style: italic;
+  color: var(--text-3);
+}
+
+/* ---------- Aviso temporal ---------- */
+.gifts-toast {
+  position: absolute;
+  top: 4.15rem;
+  left: 50%;
+  z-index: 22;
+  max-width: min(560px, 90vw);
+  padding: 0.45rem 0.95rem;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--text-1);
+  background: rgba(10, 7, 15, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  backdrop-filter: blur(8px);
+  transform: translateX(-50%);
+  pointer-events: none;
+  animation: giftsFade 0.2s ease;
+}
+
+/* ---------- Rejilla de la mochila ---------- */
+.gifts-bag__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(58px, 1fr));
+  gap: 0.45rem;
+  margin-top: 0.35rem;
+}
+
+.gifts-bag__item {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0.3rem;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--surface-1) 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary-100) 16%, transparent);
+  border-radius: 14px;
+}
+
+.gifts-bag__item img {
+  width: 84%;
+  height: 84%;
+  object-fit: contain;
+}
+
+.gifts-bag__item .gift-icon {
+  width: 52%;
+  height: 52%;
+}
+
+.gifts-bag__item--key {
+  color: #ffd479;
+}
+
+.gifts-bag__item--paper {
+  font: inherit;
+  color: #f2ead8;
+  cursor: pointer;
+}
+
+.gifts-bag__item--paper:active {
+  transform: scale(0.96);
+}
+
+.gifts-bag__empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0.6rem 0.2rem;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--text-3);
+}
+
+@media (max-width: 760px) {
+  .gifts-toast {
+    top: 3.5rem;
+    font-size: 0.74rem;
   }
 }

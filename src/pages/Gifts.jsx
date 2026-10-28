@@ -88,6 +88,15 @@ const DIALOGUES = [
 ]
 
 /* ------------------------------------------------------------------
+   Instrucciones antes de empezar (se pasan con un toque).
+------------------------------------------------------------------ */
+const GUIDE = [
+  'El juego consta de 4 niveles.',
+  'En cada nivel tienes que encontrar la llave que te dejará abrir la puerta para pasar al siguiente nivel.',
+  'Para encontrar la llave, tendrás que registrar los objetos o muebles de alrededor.',
+]
+
+/* ------------------------------------------------------------------
    Regalos (uno por nivel) y mapas del scaperoom.
    La vista es cenital: la pata se mueve por la sala, entra en las
    habitaciones, registra los objetos hasta encontrar la llave y su
@@ -966,10 +975,12 @@ export default function Gifts({ onBack }) {
   */
   const [phase, setPhase] = useState('intro')
   const [dialogueIndex, setDialogueIndex] = useState(0)
+  const [guideIndex, setGuideIndex] = useState(0)
   const [levelIndex, setLevelIndex] = useState(0)
   const [found, setFound] = useState({})
   const [collected, setCollected] = useState([])
-  const [message, setMessage] = useState(LEVELS[0].intro)
+  const [keys, setKeys] = useState([])
+  const [message, setMessage] = useState('')
   const [giftOverlay, setGiftOverlay] = useState(null)
   const [nearId, setNearId] = useState(null)
   const [walking, setWalking] = useState(false)
@@ -1014,6 +1025,14 @@ export default function Gifts({ onBack }) {
   const showEntryOverlay = phase === 'intro'
 
   useDialogueAudio(dialogue.audio, showEntryOverlay)
+
+  /* El mensaje de abajo ya no existe: los avisos salen como toast y se
+     apagan solos a los pocos segundos. */
+  useEffect(() => {
+    if (!message) return undefined
+    const timer = window.setTimeout(() => setMessage(''), 3200)
+    return () => window.clearTimeout(timer)
+  }, [message])
 
   const level = LEVELS[levelIndex]
   const view = useMemo(() => makeView(level.map), [level])
@@ -1089,7 +1108,7 @@ export default function Gifts({ onBack }) {
       const vh = window.innerHeight
       const narrow = vw <= 760
       const safeTop = narrow ? 98 : 104
-      const safeBottom = narrow ? 220 : 170
+      const safeBottom = narrow ? 146 : 168
       const safeH = Math.max(300, vh - safeTop - safeBottom)
       let scale = Math.min((vw - 24) / view.width, safeH / view.height)
 
@@ -1384,6 +1403,15 @@ export default function Gifts({ onBack }) {
     if (dialogueIndex < DIALOGUES.length - 1) {
       setDialogueIndex(dialogueIndex + 1)
     } else {
+      setGuideIndex(0)
+      setPhase('guide')
+    }
+  }
+
+  const advanceGuide = () => {
+    if (guideIndex < GUIDE.length - 1) {
+      setGuideIndex(guideIndex + 1)
+    } else {
       setPhase('room')
     }
   }
@@ -1454,6 +1482,10 @@ export default function Gifts({ onBack }) {
 
     if (next === codeSpot.code) {
       setFound((prev) => ({ ...prev, [codeSpot.id]: true }))
+      setKeys((prev) => [
+        ...prev.filter((key) => key.level !== levelIndex),
+        { level: levelIndex, id: codeSpot.id },
+      ])
       setMessage(
         `El código abre ${codeSpot.label}. ¡La llave está dentro!`
       )
@@ -1514,6 +1546,8 @@ export default function Gifts({ onBack }) {
 
     playClickSfx()
 
+    setKeys((prev) => prev.filter((key) => key.level !== levelIndex))
+
     if (isLastLevel) {
       setPhase('done')
       return
@@ -1523,11 +1557,11 @@ export default function Gifts({ onBack }) {
     setLevelIndex(next)
     setFound({})
     setPhase('room')
-    setMessage(LEVELS[next].intro)
   }
 
   const restartAll = () => {
     setCollected([])
+    setKeys([])
     setPapers([])
     setFound({})
     setGiftOverlay(null)
@@ -1535,7 +1569,7 @@ export default function Gifts({ onBack }) {
     setPaperView(null)
     setCodeSpot(null)
     setLevelIndex(0)
-    setMessage(LEVELS[0].intro)
+    setMessage('')
     setPhase('room')
     posRef.current = { ...LEVELS[0].start }
   }
@@ -1667,16 +1701,48 @@ export default function Gifts({ onBack }) {
   }
 
   const bagGifts = GIFTS.filter((g) => collected.includes(g.name))
-  const bagCount = collected.length + papers.length
-
-  /* Orden de dibujo: primero lo mas lejano (menos x+y) */
-  const renderItems = [
-    ...level.walls.map((wall, index) => ({
-      kind: 'wall',
-      key: `wall-${index}`,
-      wall,
-      depth: wall.x + wall.w / 2 + wall.y + wall.h / 2,
+  const bagItems = [
+    ...bagGifts.map((gift) => ({
+      key: `gift-${gift.name}`,
+      kind: 'gift',
+      gift,
     })),
+    ...keys.map((key) => ({
+      key: `key-${key.level}-${key.id}`,
+      kind: 'key',
+    })),
+    ...papers.map((paper) => ({
+      key: `paper-${paper.level}-${paper.id}`,
+      kind: 'paper',
+      paper,
+    })),
+  ]
+  const bagCount = bagItems.length
+
+  /* Orden de dibujo: primero lo mas lejano (menos x+y).
+     Los muros se parten en trozos para que su profundidad sea local y no
+     tapen muebles que estan por delante. */
+  const wallItems = []
+  level.walls.forEach((wall, wallIndex) => {
+    const horizontal = wall.w >= wall.h
+    const length = horizontal ? wall.w : wall.h
+    const count = Math.max(1, Math.round(length / 90))
+    const size = length / count
+    for (let i = 0; i < count; i += 1) {
+      const piece = horizontal
+        ? { x: wall.x + i * size, y: wall.y, w: size, h: wall.h }
+        : { x: wall.x, y: wall.y + i * size, w: wall.w, h: size }
+      wallItems.push({
+        kind: 'wall',
+        key: `wall-${wallIndex}-${i}`,
+        wall: piece,
+        depth: piece.x + piece.w / 2 + piece.y + piece.h / 2,
+      })
+    }
+  })
+
+  const renderItems = [
+    ...wallItems,
     ...level.decor
       .filter((item) => item.art === 'tree')
       .map((tree, index) => ({
@@ -1712,6 +1778,24 @@ export default function Gifts({ onBack }) {
               alt={dialogue.alt}
               className="gifts-overlay__duck"
             />
+          </div>
+        </div>
+      )}
+
+      {/* Instrucciones antes de empezar */}
+      {phase === 'guide' && (
+        <div className="gifts-guide" onClick={advanceGuide}>
+          <div className="gifts-guide__card glass">
+            <img
+              src={patoEstera}
+              alt=""
+              className="gifts-guide__avatar"
+            />
+            <p className="gifts-guide__step">
+              {guideIndex + 1} / {GUIDE.length}
+            </p>
+            <p className="gifts-guide__text">{GUIDE[guideIndex]}</p>
+            <p className="gifts-guide__hint">Toca para continuar</p>
           </div>
         </div>
       )}
@@ -2062,16 +2146,10 @@ export default function Gifts({ onBack }) {
               size="sm"
               className="gifts-hud__menu"
               onClick={onBack}
+              title="Volver al menú"
             >
-              ← Menú
+              ←
             </GlassButton>
-
-            <div className="gifts-hud__level glass">
-              <span className="gifts-hud__eyebrow">
-                Nivel {levelIndex + 1} de {LEVELS.length}
-              </span>
-              <h2 className="gifts-hud__title">{level.name}</h2>
-            </div>
           </header>
 
           <button
@@ -2099,6 +2177,12 @@ export default function Gifts({ onBack }) {
               Código
             </span>
           </div>
+
+          {message && (
+            <div className="gifts-toast glass" role="status">
+              {message}
+            </div>
+          )}
 
           {/* HUD inferior */}
           <div className="gifts-hud__bottom">
@@ -2181,13 +2265,6 @@ export default function Gifts({ onBack }) {
                 <span className="gifts-joystick__cross" aria-hidden="true" />
                 <span className="gifts-joystick__knob" ref={joyKnobRef} />
               </div>
-            </div>
-
-            <div className="gifts-dialog glass">
-              <img src={patoEstera} alt="" className="gifts-dialog__avatar" />
-              <p className="gifts-dialog__text" role="status">
-                {message}
-              </p>
             </div>
 
             <div className="gifts-hud__action">
@@ -2296,60 +2373,49 @@ export default function Gifts({ onBack }) {
               </button>
             </header>
 
-            <div className="gifts-bag__objectives">
-              <span className={hasKey ? 'is-on' : ''}>
-                <KeyIcon />
-                Llave
-              </span>
-              <span className={hasGift ? 'is-on' : ''}>
-                <GiftIcon />
-                Regalo
-              </span>
-              <span className={hasPaper ? 'is-on' : ''}>
-                <PaperIcon />
-                Código
-              </span>
-            </div>
-
-            <h3 className="gifts-bag__subtitle">Regalos</h3>
-            {bagGifts.length ? (
-              <ul className="gifts-bag__gifts">
-                {bagGifts.map((g) => (
-                  <li key={g.name}>
-                    <img src={g.image} alt="" />
-                    <span>{g.name}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="gifts-bag__empty">
-                Todavía no has cogido ningún regalo.
-              </p>
-            )}
-
-            <h3 className="gifts-bag__subtitle">Papeles con códigos</h3>
-            {papers.length ? (
-              <ul className="gifts-bag__papers">
-                {papers.map((paper) => (
-                  <li key={`${paper.level}-${paper.id}`}>
+            <div className="gifts-bag__grid">
+              {bagItems.length ? (
+                bagItems.map((item) => {
+                  if (item.kind === 'gift') {
+                    return (
+                      <div
+                        key={item.key}
+                        className="gifts-bag__item"
+                        title={item.gift.name}
+                      >
+                        <img src={item.gift.image} alt={item.gift.name} />
+                      </div>
+                    )
+                  }
+                  if (item.kind === 'key') {
+                    return (
+                      <div
+                        key={item.key}
+                        className="gifts-bag__item gifts-bag__item--key"
+                        title="Llave"
+                      >
+                        <KeyIcon />
+                      </div>
+                    )
+                  }
+                  return (
                     <button
+                      key={item.key}
                       type="button"
-                      className="gifts-bag__paper"
-                      onClick={() => setPaperView(paper)}
+                      className="gifts-bag__item gifts-bag__item--paper"
+                      title="Papel con código"
+                      onClick={() => setPaperView(item.paper)}
                     >
                       <PaperIcon />
-                      <span>Papel de {paper.where}</span>
-                      <strong>Código</strong>
                     </button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="gifts-bag__empty">
-                No tienes papeles todavía. Registra los objetos para encontrar
-                alguno.
-              </p>
-            )}
+                  )
+                })
+              ) : (
+                <p className="gifts-bag__empty">
+                  Tu mochila está vacía. Registra objetos para encontrar cosas.
+                </p>
+              )}
+            </div>
 
             <p className="gifts-bag__tip">
               Toca un papel para ver el código de cerca.
