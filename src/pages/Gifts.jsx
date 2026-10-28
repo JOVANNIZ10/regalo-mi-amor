@@ -17,6 +17,8 @@ import {
   isoFrameFor,
   IsoArt,
   IsoBox,
+  CageBack,
+  CageFront,
 } from '../components/IsoArt'
 import patoEstera from '../assets/images/patoEstera.webp'
 import patoChicoEnfadado from '../assets/images/patoChicoEnfadado.webp'
@@ -30,6 +32,7 @@ import regalosPatoChicoAudio1 from '../assets/audios/regalosPatoChicoAudio1.mp3'
 import regalosPatoChicoAudio2 from '../assets/audios/regalosPatoChicoAudio2.mp3'
 import regalosPatoChicaAudio1 from '../assets/audios/regalosPatoChicaAudio1.mp3'
 import regalosPatoChicaAudio2 from '../assets/audios/regalosPatoChicaAudio2.mp3'
+import musicaTensionRegalo from '../assets/audios/musicaTensionRegalo.mp3'
 import regalo1 from '../assets/images/regalo1.webp'
 import regalo2 from '../assets/images/regalo2.webp'
 import regalo3 from '../assets/images/regalo3.webp'
@@ -52,22 +55,22 @@ const DIALOGUES = [
   },
   {
     image: patoChicoEnfadado,
-    alt: 'Patito enfadado',
-    name: 'Patito',
+    alt: 'Ivan',
+    name: 'Ivan',
     text: 'Ahhhh, saldre de aqui como sea y no te burles de mi, yo soy creatura de mi novia, seguro te dara para el pelo pedazo de calvo.',
     audio: regalosPatoChicoAudio1,
   },
   {
     image: patoEsteraEnfadado,
-    alt: 'Pata enfadada',
-    name: 'Pata',
+    alt: 'Estera',
+    name: 'Estera',
     text: 'Como te atreves a capturar a mi amorcito, si no lo haces, mi furia caerá sobre ti. Amor, ahora te rescataré, estate tranquilo.',
     audio: regalosPatoChicaAudio1,
   },
   {
     image: patoChicoEnfadado,
-    alt: 'Patito enfadado',
-    name: 'Patito',
+    alt: 'Ivan',
+    name: 'Ivan',
     text: 'Gracias mi amor. ¿Escuchaste grandullon? Segurio no te gustará probar la furia de mi novia, hazme caso, yo ya la he probado.',
     audio: regalosPatoChicoAudio2,
   },
@@ -80,8 +83,8 @@ const DIALOGUES = [
   },
   {
     image: patoEsteraEnfadado,
-    alt: 'Pata enfadada',
-    name: 'Pata',
+    alt: 'Estera',
+    name: 'Estera',
     text: 'Vale, ya veras de lo que soy capaz. Amor mio, YA VOY.',
     audio: regalosPatoChicaAudio2,
   },
@@ -95,6 +98,9 @@ const GUIDE = [
   'En cada nivel tienes que encontrar la llave que te dejará abrir la puerta para pasar al siguiente nivel.',
   'Para encontrar la llave, tendrás que registrar los objetos o muebles de alrededor.',
 ]
+
+/* Color de cada papel según el nivel, para distinguirlos en la mochila */
+const PAPER_COLORS = ['#ffd479', '#8fd0e8', '#c9a0e8', '#ff9a9a']
 
 /* ------------------------------------------------------------------
    Regalos (uno por nivel) y mapas del scaperoom.
@@ -584,8 +590,6 @@ const LEVELS = [
       { x: 60, y: 914, w: 1480, h: 26 },
       { x: 600, y: 86, w: 26, h: 294 },
       { x: 974, y: 86, w: 26, h: 294 },
-      { x: 600, y: 380, w: 140, h: 26 },
-      { x: 860, y: 380, w: 140, h: 26 },
       { x: 86, y: 380, w: 274, h: 26 },
       { x: 86, y: 760, w: 274, h: 26 },
       { x: 360, y: 380, w: 26, h: 170 },
@@ -990,6 +994,9 @@ export default function Gifts({ onBack }) {
   const [codeInput, setCodeInput] = useState('')
   const [codeError, setCodeError] = useState(false)
   const [bagOpen, setBagOpen] = useState(false)
+  const [bagGlow, setBagGlow] = useState(false)
+  const [bagNote, setBagNote] = useState('')
+  const [keyOverlay, setKeyOverlay] = useState(false)
   const [paperView, setPaperView] = useState(null)
 
   /* ---------- Refs del juego ---------- */
@@ -1012,6 +1019,8 @@ export default function Gifts({ onBack }) {
   const joyBaseRef = useRef(null)
   const joyKnobRef = useRef(null)
   const pausedRef = useRef(false)
+  const musicRef = useRef(null)
+  const phaseRef = useRef('intro')
   const viewRef = useRef({ scale: 0.7, vw: 1280, vh: 900, safeTop: 104, safeH: 678 })
 
   /* Al entrar se corta cualquier voz de la seccion anterior y, al salir,
@@ -1033,6 +1042,66 @@ export default function Gifts({ onBack }) {
     const timer = window.setTimeout(() => setMessage(''), 3200)
     return () => window.clearTimeout(timer)
   }, [message])
+
+  /* El aviso de lo recibido y el brillo de la mochila desaparecen solos
+     a los 5 segundos si no se abre la mochila. */
+  useEffect(() => {
+    if (!bagNote) return undefined
+    const timer = window.setTimeout(() => {
+      setBagGlow(false)
+      setBagNote('')
+    }, 5000)
+    return () => window.clearTimeout(timer)
+  }, [bagNote])
+
+  /* ---------- Musica de tension durante el juego ---------- */
+  useEffect(() => {
+    const audio = new Audio(musicaTensionRegalo)
+    audio.loop = true
+    audio.volume = 0.08
+    musicRef.current = audio
+
+    let bound = true
+    const unbind = () => {
+      if (!bound) return
+      bound = false
+      window.removeEventListener('pointerdown', startMusic)
+      window.removeEventListener('keydown', startMusic)
+    }
+    const startMusic = () => {
+      if (phaseRef.current === 'done') return
+      if (!audio.paused) {
+        unbind()
+        return
+      }
+      audio
+        .play()
+        .then(unbind)
+        .catch(() => {})
+    }
+
+    startMusic()
+    window.addEventListener('pointerdown', startMusic)
+    window.addEventListener('keydown', startMusic)
+
+    return () => {
+      unbind()
+      audio.pause()
+      musicRef.current = null
+    }
+  }, [])
+
+  useEffect(() => {
+    phaseRef.current = phase
+    const audio = musicRef.current
+    if (!audio) return
+    if (phase === 'done') {
+      audio.pause()
+      audio.currentTime = 0
+    } else {
+      audio.play().catch(() => {})
+    }
+  }, [phase])
 
   const level = LEVELS[levelIndex]
   const view = useMemo(() => makeView(level.map), [level])
@@ -1421,15 +1490,6 @@ export default function Gifts({ onBack }) {
     playClickSfx()
 
     if (found[spot.id]) {
-      if (spot.content === 'safe') {
-        setMessage('La caja fuerte ya está abierta.')
-      } else if (spot.content === 'gift') {
-        setMessage('El regalo de esta sala ya está en tu mochila.')
-      } else if (spot.content === 'paper') {
-        setMessage('Ese papel ya está guardado en la mochila.')
-      } else {
-        setMessage('Ya has registrado ese sitio. No hay nada más.')
-      }
       return
     }
 
@@ -1442,6 +1502,10 @@ export default function Gifts({ onBack }) {
 
     if (spot.content === 'paper') {
       setFound((prev) => ({ ...prev, [spot.id]: true }))
+      setBagGlow(true)
+      setBagNote(
+        `Documento con código del nivel ${levelIndex + 1}. Consúltalo en la mochila.`
+      )
       setPapers((prev) => [
         ...prev,
         {
@@ -1452,15 +1516,14 @@ export default function Gifts({ onBack }) {
           label: spot.label,
         },
       ])
-      setMessage(
-        'Has encontrado un papel con un código. Guárdalo en la mochila y ábrelo para leerlo.'
-      )
       return
     }
 
     setFound((prev) => ({ ...prev, [spot.id]: true }))
 
     if (spot.content === 'gift') {
+      setBagGlow(true)
+      setBagNote(`Has guardado ${GIFTS[levelIndex].name} en la mochila.`)
       setCollected((prev) =>
         prev.includes(GIFTS[levelIndex].name)
           ? prev
@@ -1468,8 +1531,6 @@ export default function Gifts({ onBack }) {
       )
       setGiftOverlay(GIFTS[levelIndex])
       setPhase('gift')
-    } else {
-      setMessage(spot.note)
     }
   }
 
@@ -1486,13 +1547,11 @@ export default function Gifts({ onBack }) {
         ...prev.filter((key) => key.level !== levelIndex),
         { level: levelIndex, id: codeSpot.id },
       ])
-      setMessage(
-        `El código abre ${codeSpot.label}. ¡La llave está dentro!`
-      )
       playClickSfx()
       window.setTimeout(() => {
         setCodeSpot(null)
         setCodeInput('')
+        setKeyOverlay(true)
       }, 650)
     } else {
       setCodeError(true)
@@ -1518,11 +1577,6 @@ export default function Gifts({ onBack }) {
   const closeGiftOverlay = () => {
     setGiftOverlay(null)
     setPhase('room')
-    setMessage(
-      hasKey
-        ? 'El regalo ya está en tu mochila. ¡También tienes la llave! Ve a la salida.'
-        : 'El regalo ya está en tu mochila. Ahora abre la caja fuerte para conseguir la llave.'
-    )
   }
 
   const handleExit = () => {
@@ -1566,6 +1620,9 @@ export default function Gifts({ onBack }) {
     setFound({})
     setGiftOverlay(null)
     setBagOpen(false)
+    setBagGlow(false)
+    setBagNote('')
+    setKeyOverlay(false)
     setPaperView(null)
     setCodeSpot(null)
     setLevelIndex(0)
@@ -1707,10 +1764,6 @@ export default function Gifts({ onBack }) {
       kind: 'gift',
       gift,
     })),
-    ...keys.map((key) => ({
-      key: `key-${key.level}-${key.id}`,
-      kind: 'key',
-    })),
     ...papers.map((paper) => ({
       key: `paper-${paper.level}-${paper.id}`,
       kind: 'paper',
@@ -1786,11 +1839,6 @@ export default function Gifts({ onBack }) {
       {phase === 'guide' && (
         <div className="gifts-guide" onClick={advanceGuide}>
           <div className="gifts-guide__card glass">
-            <img
-              src={patoEstera}
-              alt=""
-              className="gifts-guide__avatar"
-            />
             <p className="gifts-guide__step">
               {guideIndex + 1} / {GUIDE.length}
             </p>
@@ -2084,12 +2132,44 @@ export default function Gifts({ onBack }) {
                   >
                     {level.exit.kind === 'cage' ? (
                       <span className="gifts-cage">
+                        <svg
+                          className="iso-art gifts-cage__back"
+                          viewBox={`${-frame.width / 2} ${-frame.top} ${
+                            frame.width
+                          } ${frame.top + frame.bottom}`}
+                          aria-hidden="true"
+                        >
+                          <ellipse
+                            cx={0}
+                            cy={0}
+                            rx={frame.width * 0.3}
+                            ry={frame.width * 0.12}
+                            fill="rgba(0,0,0,0.22)"
+                          />
+                          <CageBack
+                            w={frame.aw}
+                            d={frame.d}
+                            h={frame.h}
+                          />
+                        </svg>
                         <img
                           src={patoChicoTriste}
-                          alt=""
+                          alt="Patito enjaulado"
                           className="gifts-cage__duck"
                         />
-                        <IsoArt name="cage" w={level.exit.w} />
+                        <svg
+                          className="iso-art gifts-cage__front"
+                          viewBox={`${-frame.width / 2} ${-frame.top} ${
+                            frame.width
+                          } ${frame.top + frame.bottom}`}
+                          aria-hidden="true"
+                        >
+                          <CageFront
+                            w={frame.aw}
+                            d={frame.d}
+                            h={frame.h}
+                          />
+                        </svg>
                       </span>
                     ) : (
                       <IsoArt
@@ -2154,13 +2234,23 @@ export default function Gifts({ onBack }) {
 
           <button
             type="button"
-            className="gifts-bagbtn glass"
-            onClick={() => setBagOpen(true)}
+            className={`gifts-bagbtn glass${bagGlow ? ' is-glow' : ''}`}
+            onClick={() => {
+              setBagOpen(true)
+              setBagGlow(false)
+              setBagNote('')
+            }}
             aria-label={`Abrir mochila (${bagCount} objetos)`}
           >
             <BackpackIcon />
             <span className="gifts-bagbtn__count">{bagCount}</span>
           </button>
+
+          {bagNote && (
+            <div className="gifts-bag-note glass" role="status">
+              {bagNote}
+            </div>
+          )}
 
           {/* Estado de la sala */}
           <div className="gifts-hud__status">
@@ -2387,26 +2477,25 @@ export default function Gifts({ onBack }) {
                       </div>
                     )
                   }
-                  if (item.kind === 'key') {
-                    return (
-                      <div
-                        key={item.key}
-                        className="gifts-bag__item gifts-bag__item--key"
-                        title="Llave"
-                      >
-                        <KeyIcon />
-                      </div>
-                    )
-                  }
                   return (
                     <button
                       key={item.key}
                       type="button"
                       className="gifts-bag__item gifts-bag__item--paper"
-                      title="Papel con código"
+                      style={{
+                        color:
+                          PAPER_COLORS[
+                            item.paper.level % PAPER_COLORS.length
+                          ],
+                      }}
+                      title={`Código del nivel ${item.paper.level + 1}`}
+                      aria-label={`Código del nivel ${item.paper.level + 1}`}
                       onClick={() => setPaperView(item.paper)}
                     >
                       <PaperIcon />
+                      <span className="gifts-bag__level">
+                        {item.paper.level + 1}
+                      </span>
                     </button>
                   )
                 })
@@ -2429,8 +2518,17 @@ export default function Gifts({ onBack }) {
           className="gifts-note-overlay"
           onClick={() => setPaperView(null)}
         >
-          <div className="gifts-note">
-            <p className="gifts-note__eyebrow">{paperView.where}</p>
+          <div
+            className="gifts-note"
+            style={{
+              borderTop: `6px solid ${
+                PAPER_COLORS[paperView.level % PAPER_COLORS.length]
+              }`,
+            }}
+          >
+            <p className="gifts-note__eyebrow">
+              Nivel {paperView.level + 1} · {paperView.where}
+            </p>
             <p className="gifts-note__label">{paperView.label}</p>
             <p className="gifts-note__intro">El código es</p>
             <p className="gifts-note__code">{paperView.code}</p>
@@ -2454,6 +2552,27 @@ export default function Gifts({ onBack }) {
             <div className="gifts-gift">
               <span className="gifts-gift__visual">
                 <img src={giftOverlay.image} alt={giftOverlay.name} />
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Aviso de llave conseguida (como el de los regalos) */}
+      {phase === 'room' && keyOverlay && (
+        <div className="gifts-overlay" onClick={() => setKeyOverlay(false)}>
+          <div className="gifts-overlay__dialog">
+            <div className="gifts-overlay__bubble">
+              <p className="gifts-overlay__text">¡Has conseguido la llave!</p>
+              <p className="gifts-overlay__name">
+                Llave del nivel {levelIndex + 1}
+              </p>
+              <p className="gifts-overlay__hint">Toca para seguir buscando</p>
+            </div>
+
+            <div className="gifts-gift gifts-gift--key">
+              <span className="gifts-gift__visual">
+                <KeyIcon />
               </span>
             </div>
           </div>

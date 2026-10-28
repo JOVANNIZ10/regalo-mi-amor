@@ -142,6 +142,7 @@ export default function Quiz({ onBack, onComplete }) {
       <main className="quiz quiz--result">
         <div className="quiz__result">
           <div className="quiz__duck-bubble">
+            <p className="quiz__duck-name">Ivan</p>
             <p className="quiz__score">
               {score} de {total}
             </p>

@@ -17,7 +17,6 @@ export default function App() {
   /* Cada nuevo intento del cuestionario invalida el desbloqueo anterior:
      solo se queda desbloqueado si la nueva prueba acaba en 6/6. */
   const handleStartQuiz = () => {
-    setQuizCompleted(false)
     setCompletionGreetingPending(false)
     setPage('quiz')
   }

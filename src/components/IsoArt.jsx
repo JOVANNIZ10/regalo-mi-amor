@@ -1523,8 +1523,7 @@ function Chains({ w, d, h }) {
   )
 }
 
-function Cage({ w, d, h }) {
-  const bars = 5
+function CageBack({ w, d, h }) {
   return (
     <>
       <IsoBox
@@ -1538,25 +1537,37 @@ function Cage({ w, d, h }) {
         left="#565b62"
         right="#44484e"
       />
-      <IsoBox
-        x={-w / 2}
-        y={-d / 2}
-        z={h - 12}
-        w={w}
-        d={d}
-        h={12}
-        top="#8d99a5"
-        left="#6b7078"
-        right="#565b62"
-      />
       {[
         [-w / 2, -d / 2],
         [w / 2 - 8, -d / 2],
+      ].map(([px, py], i) => (
+        <IsoBox
+          key={`postb${i}`}
+          x={px}
+          y={py}
+          z={12}
+          w={8}
+          d={8}
+          h={h - 24}
+          top="#8d99a5"
+          left="#6b7078"
+          right="#565b62"
+        />
+      ))}
+    </>
+  )
+}
+
+function CageFront({ w, d, h }) {
+  const bars = 5
+  return (
+    <>
+      {[
         [-w / 2, d / 2 - 8],
         [w / 2 - 8, d / 2 - 8],
       ].map(([px, py], i) => (
         <IsoBox
-          key={`post${i}`}
+          key={`postf${i}`}
           x={px}
           y={py}
           z={12}
@@ -1602,9 +1613,74 @@ function Cage({ w, d, h }) {
           />
         )
       })}
+      {/* techo de barrotes: deja ver al patito dentro de la jaula */}
+      {[
+        { x: -w / 2, y: -d / 2, w, d: 6 },
+        { x: -w / 2, y: d / 2 - 6, w, d: 6 },
+        { x: -w / 2, y: -d / 2, w: 6, d },
+        { x: w / 2 - 6, y: -d / 2, w: 6, d },
+      ].map((rim, i) => (
+        <IsoBox
+          key={`rim${i}`}
+          x={rim.x}
+          y={rim.y}
+          z={h - 12}
+          w={rim.w}
+          d={rim.d}
+          h={8}
+          top="#8d99a5"
+          left="#6b7078"
+          right="#565b62"
+        />
+      ))}
+      {Array.from({ length: 2 }).map((_, i) => {
+        const bx = -w / 2 + ((i + 1) / 3) * w
+        return (
+          <IsoBox
+            key={`rbx${i}`}
+            x={bx - 2}
+            y={-d / 2}
+            z={h - 11}
+            w={4}
+            d={d}
+            h={6}
+            top="#cfd8e0"
+            left="#9aa7b3"
+            right="#7c8792"
+          />
+        )
+      })}
+      {Array.from({ length: 2 }).map((_, i) => {
+        const by = -d / 2 + ((i + 1) / 3) * d
+        return (
+          <IsoBox
+            key={`rby${i}`}
+            x={-w / 2}
+            y={by - 2}
+            z={h - 11}
+            w={w}
+            d={4}
+            h={6}
+            top="#cfd8e0"
+            left="#9aa7b3"
+            right="#7c8792"
+          />
+        )
+      })}
     </>
   )
 }
+
+function Cage({ w, d, h }) {
+  return (
+    <>
+      <CageBack w={w} d={d} h={h} />
+      <CageFront w={w} d={d} h={h} />
+    </>
+  )
+}
+
+export { CageBack, CageFront }
 
 function DoorArt({ w, d, h }) {
   return (

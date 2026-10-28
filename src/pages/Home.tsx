@@ -205,7 +205,7 @@ export default function Home({
           <div className="duck-dialog" onClick={closeOverlay}>
             <div className="speech-bubble">
               <p className="speech-bubble__text">{introDialogue.message}</p>
-              <p className="speech-bubble__name">Ivan, el novio mas guapo e inteligente del universo</p>
+              <p className="speech-bubble__name">Ivan</p>
             </div>
             <img
               src={introDialogue.pose}
@@ -224,6 +224,9 @@ export default function Home({
             className="duck-corner__image"
           />
           <div className="speech-bubble speech-bubble--corner">
+            <p className="speech-bubble__name speech-bubble__name--corner">
+              Ivan
+            </p>
             <p className="speech-bubble__text">{cornerDialogue.message}</p>
           </div>
         </div>

@@ -17,9 +17,7 @@ export default function Letter({ onBack }) {
                 Mi vida, te he preparado una carta, espero que te guste. Mereces
                 esto y un infinito.
               </p>
-              <p className="letter-overlay__name">
-                Ivan, el novio mas guapo e inteligente del universo
-              </p>
+              <p className="letter-overlay__name">Ivan</p>
             </div>
             <img src={pato} alt="Patito rosa" className="letter-overlay__duck" />
           </div>

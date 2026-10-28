@@ -89,7 +89,8 @@
 }
 
 .gifts-overlay__bubble {
-  padding: 1.5rem;
+  position: relative;
+  padding: 2.15rem 1.5rem 1.5rem;
   text-align: center;
   color: #1a1a1a;
   background: rgba(255, 255, 255, 0.95);
@@ -105,11 +106,19 @@
 }
 
 .gifts-overlay__name {
+  position: absolute;
+  top: -15px;
+  left: 16px;
   margin: 0;
-  font-size: 0.82rem;
+  padding: 0.22rem 0.9rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  font-style: italic;
-  color: #d946ef;
+  font-style: normal;
+  letter-spacing: 0.01em;
+  color: #ffffff;
+  background: linear-gradient(180deg, #d946ef, #a21caf);
+  border-radius: 999px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
 }
 
 .gifts-overlay__hint {
@@ -472,12 +481,13 @@
 .gifts-cage__duck {
   position: absolute;
   left: 50%;
-  top: calc(var(--base, 150px) - 122px);
+  top: calc(var(--base, 150px) - 112px);
   width: auto;
-  height: 122px;
+  height: 112px;
   transform: translateX(-50%);
   object-fit: contain;
-  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5));
+  filter: drop-shadow(0 0 16px rgba(255, 214, 150, 0.55))
+    drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5));
 }
 
 /* ---------- Personaje ---------- */
@@ -1359,6 +1369,19 @@
   object-fit: contain;
 }
 
+/* Llave encontrada: mismo aviso que el de los regalos */
+.gifts-gift--key .gifts-gift__visual {
+  color: #ffd479;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.45),
+    0 0 46px rgba(255, 212, 121, 0.22);
+}
+
+.gifts-gift--key .gift-icon {
+  width: 62%;
+  height: 62%;
+}
+
 /* ---------- Coleccion final ---------- */
 .gifts__collection {
   display: flex;
@@ -1546,10 +1569,6 @@
   height: 52%;
 }
 
-.gifts-bag__item--key {
-  color: #ffd479;
-}
-
 .gifts-bag__item--paper {
   font: inherit;
   color: #f2ead8;
@@ -1574,4 +1593,90 @@
     top: 3.5rem;
     font-size: 0.74rem;
   }
+}
+
+.gifts-bagbtn.is-glow {
+  color: #ffd479;
+  box-shadow:
+    0 0 0 3px hsl(from var(--accent-400) h s l / 0.35),
+    0 0 26px hsl(from var(--accent-400) h s l / 0.75);
+  animation: giftsBagPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes giftsBagPulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 2px hsl(from var(--accent-400) h s l / 0.3),
+      0 0 18px hsl(from var(--accent-400) h s l / 0.55);
+  }
+  50% {
+    box-shadow:
+      0 0 0 5px hsl(from var(--accent-400) h s l / 0.16),
+      0 0 32px hsl(from var(--accent-400) h s l / 0.85);
+  }
+}
+
+.gifts-bag-note {
+  position: absolute;
+  top: 4.4rem;
+  right: 1rem;
+  z-index: 29;
+  width: min(252px, 64vw);
+  padding: 0.55rem 0.75rem;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  text-align: left;
+  color: var(--text-1);
+  border-radius: 14px;
+  pointer-events: none;
+  animation: giftsRise 0.35s ease;
+}
+
+/* pico que apunta a la mochila */
+.gifts-bag-note::after {
+  content: '';
+  position: absolute;
+  top: -5px;
+  right: 20px;
+  width: 10px;
+  height: 10px;
+  background: var(--glass-bg);
+  border-top: 1px solid var(--border-1);
+  border-left: 1px solid var(--border-1);
+  border-radius: 2px 0 0 0;
+  transform: rotate(45deg);
+}
+
+.gifts-bag__level {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  display: grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: inherit;
+  background: rgba(0, 0, 0, 0.68);
+  border: 1px solid currentColor;
+  border-radius: 999px;
+}
+
+@media (max-width: 760px) {
+  .gifts-bag-note {
+    top: 4rem;
+    right: 0.7rem;
+    font-size: 0.7rem;
+  }
+}
+
+.gifts-cage__front {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
