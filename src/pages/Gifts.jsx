@@ -1053,6 +1053,7 @@ export default function Gifts({ onBack }) {
   const stepsGainRef = useRef(null)
   const pickupAudiosRef = useRef(new Set())
   const ambientRunRef = useRef(0)
+  const ambientPlayedRef = useRef(new Set())
   const phaseRef = useRef('intro')
   const viewRef = useRef({ scale: 0.7, vw: 1280, vh: 900, safeTop: 104, safeH: 678 })
 
@@ -1341,7 +1342,9 @@ export default function Gifts({ onBack }) {
     }
 
     if (levelIndex === 3) {
+      if (ambientPlayedRef.current.has('3')) return undefined
       const timer = window.setTimeout(() => {
+        ambientPlayedRef.current.add('3')
         say(
           'Estera',
           AMBIENT_DUNGEON_ESTERA,
@@ -1363,8 +1366,11 @@ export default function Gifts({ onBack }) {
     }
 
     if (levelIndex === 0 || levelIndex === 1) {
+      const sceneKey = String(levelIndex)
+      if (ambientPlayedRef.current.has(sceneKey)) return undefined
       const isHouse = levelIndex === 0
       const timer = window.setTimeout(() => {
+        ambientPlayedRef.current.add(sceneKey)
         say(
           'Estera',
           isHouse ? AMBIENT_HOUSE : AMBIENT_GARDEN,
@@ -1912,6 +1918,7 @@ export default function Gifts({ onBack }) {
     setBagGlow(false)
     setBagNote('')
     setKeyOverlay(false)
+    ambientPlayedRef.current.clear()
     setPaperView(null)
     setCodeSpot(null)
     setLevelIndex(0)
