@@ -33,6 +33,12 @@ import regalosPatoChicoAudio2 from '../assets/audios/regalosPatoChicoAudio2.mp3'
 import regalosPatoChicaAudio1 from '../assets/audios/regalosPatoChicaAudio1.mp3'
 import regalosPatoChicaAudio2 from '../assets/audios/regalosPatoChicaAudio2.mp3'
 import musicaTensionRegalo from '../assets/audios/musicaTensionRegalo.mp3'
+import pasosMadera from '../assets/audios/pasosMadera.mp3'
+import pasosHierba from '../assets/audios/pasosHierba.mp3'
+import pasosCueva from '../assets/audios/pasosCueva.mp3'
+import sonidoLlave from '../assets/audios/sonidoLlave.mp3'
+import sonidoHojaPapel from '../assets/audios/sonidoHojaPapel.mp3'
+import sonidoRegalo from '../assets/audios/sonidoRegalo.mp3'
 import regalo1 from '../assets/images/regalo1.webp'
 import regalo2 from '../assets/images/regalo2.webp'
 import regalo3 from '../assets/images/regalo3.webp'
@@ -50,42 +56,42 @@ const DIALOGUES = [
     image: villano,
     alt: 'Villano',
     name: 'Villano',
-    text: 'Hahahaha, hahahaha, he conseguido capturarte, NADIE VA A RESCATARTE. ¿Tienes miedo criatura de mama?',
+    text: 'Hahahaha, hahahaha, he conseguido capturarte, NADIE SERÁ CAPAZ DE RESCATARTE. ¿Tienes miedo criatura pequeña de mama?',
     audio: regalosVillanoAudio1,
   },
   {
     image: patoChicoEnfadado,
     alt: 'Ivan',
     name: 'Ivan',
-    text: 'Ahhhh, saldre de aqui como sea y no te burles de mi, yo soy creatura de mi novia, seguro te dara para el pelo pedazo de calvo.',
+    text: 'Ahhhh, saldré de aqui como sea y no te burles de mi, yo soy criatura de mi novia, seguro ella te dará para el pelo pedazo de calvo.',
     audio: regalosPatoChicoAudio1,
   },
   {
     image: patoEsteraEnfadado,
     alt: 'Estera',
     name: 'Estera',
-    text: 'Como te atreves a capturar a mi amorcito, si no lo haces, mi furia caerá sobre ti. Amor, ahora te rescataré, estate tranquilo.',
+    text: 'Como te atreves a capturar a mi amorcito, SUELTALO YA, si no lo haces, mi furia caerá sobre ti. Amor, ahora te rescataré, estate tranquilo.',
     audio: regalosPatoChicaAudio1,
   },
   {
     image: patoChicoEnfadado,
     alt: 'Ivan',
     name: 'Ivan',
-    text: 'Gracias mi amor. ¿Escuchaste grandullon? Segurio no te gustará probar la furia de mi novia, hazme caso, yo ya la he probado.',
+    text: 'Gracias mi amor. ¿Escuchaste grandullon? Seguro no te gustará probar la furia de mi novia, hazme caso, yo ya la he probado.',
     audio: regalosPatoChicoAudio2,
   },
   {
     image: villano,
     alt: 'Villano',
     name: 'Villano',
-    text: 'esta bien, le daré una oportunidad, si es capaz de pasar la siguiente prueba de obstaculos te soltaré, si no, te haré picadillo. ¿Estas de acuerdo?',
+    text: 'Está bien, le daré una oportunidad, si es capaz de pasar la siguiente prueba te soltaré, si no, te haré picadillo.',
     audio: regalosVillanoAudio2,
   },
   {
     image: patoEsteraEnfadado,
     alt: 'Estera',
     name: 'Estera',
-    text: 'Vale, ya veras de lo que soy capaz. Amor mio, YA VOY.',
+    text: 'Vale, ya verás de lo que soy capaz. Amor mio, YA VOY.',
     audio: regalosPatoChicaAudio2,
   },
 ]
@@ -111,6 +117,10 @@ const PAPER_COLORS = ['#ffd479', '#8fd0e8', '#c9a0e8', '#ff9a9a']
 ------------------------------------------------------------------ */
 /* Volumen real de la musica de fondo (nodo de ganancia de Web Audio) */
 const MUSIC_VOLUME = 0.05
+/* Pasos segun el escenario: casa, jardin, bosque y calabozo */
+const STEP_SOUNDS = [pasosMadera, pasosHierba, pasosHierba, pasosCueva]
+/* Ganancia por pista (los mp3 tienen niveles muy distintos) */
+const STEP_GAINS = [6, 28, 28, 2]
 
 const GIFTS = [
   { name: 'Patito de peluche', image: regalo1 },
@@ -1024,6 +1034,10 @@ export default function Gifts({ onBack }) {
   const pausedRef = useRef(false)
   const musicRef = useRef(null)
   const musicCtxRef = useRef(null)
+  const stepsRef = useRef(null)
+  const stepsCtxRef = useRef(null)
+  const stepsGainRef = useRef(null)
+  const pickupAudiosRef = useRef(new Set())
   const phaseRef = useRef('intro')
   const viewRef = useRef({ scale: 0.7, vw: 1280, vh: 900, safeTop: 104, safeH: 678 })
 
@@ -1145,6 +1159,118 @@ export default function Gifts({ onBack }) {
       audio.play().catch(() => {})
     }
   }, [phase])
+
+  /* ---------- Pasos de madera (solo primer escenario) ---------- */
+  useEffect(() => {
+    const audio = new Audio(STEP_SOUNDS[0])
+    audio.loop = true
+    audio.volume = 1
+    stepsRef.current = audio
+
+    let ctx = null
+    let gain = null
+    try {
+      const Ctx = window.AudioContext ?? window.webkitAudioContext
+      if (Ctx) {
+        ctx = new Ctx()
+        const source = ctx.createMediaElementSource(audio)
+        gain = ctx.createGain()
+        gain.gain.value = STEP_GAINS[0]
+        source.connect(gain).connect(ctx.destination)
+        stepsCtxRef.current = ctx
+        stepsGainRef.current = gain
+      }
+    } catch {
+      ctx = null
+      gain = null
+    }
+    /* Navegador sin Web Audio: el elemento al maximo. */
+    if (!gain) audio.volume = 1
+
+    return () => {
+      audio.pause()
+      stepsRef.current = null
+      stepsCtxRef.current = null
+      stepsGainRef.current = null
+      try {
+        ctx?.close()?.catch?.(() => {})
+      } catch {
+        /* el contexto ya estaba cerrado */
+      }
+    }
+  }, [])
+
+  /* Cada escenario usa su propio sonido de pasos. */
+  useEffect(() => {
+    const audio = stepsRef.current
+    if (!audio) return
+    audio.pause()
+    try {
+      audio.currentTime = 0
+    } catch {
+      /* da igual si no deja rebobinar */
+    }
+    audio.src = STEP_SOUNDS[levelIndex] ?? STEP_SOUNDS[0]
+    const gain = stepsGainRef.current
+    if (gain) gain.gain.value = STEP_GAINS[levelIndex] ?? STEP_GAINS[0]
+  }, [levelIndex])
+
+  useEffect(() => {
+    const audio = stepsRef.current
+    if (!audio) return
+    const shouldWalk = walking && phase === 'room'
+
+    if (shouldWalk) {
+      const ctx = stepsCtxRef.current
+      try {
+        ctx?.resume()?.catch?.(() => {})
+      } catch {
+        /* contexto no disponible */
+      }
+      audio.play().catch(() => {})
+    } else if (!audio.paused) {
+      audio.pause()
+      try {
+        audio.currentTime = 0
+      } catch {
+        /* da igual si no deja rebobinar */
+      }
+    }
+  }, [walking, phase, levelIndex])
+
+  /* Efectos cortos al recoger objetos. Pasan por Web Audio para que el
+     volumen sea el mismo en todos los navegadores (incluido iPhone). */
+  const playPickupSfx = (src, volume = 0.6) => {
+    const audio = new Audio(src)
+    const ctx = stepsCtxRef.current
+    if (ctx) {
+      try {
+        ctx.resume()?.catch?.(() => {})
+        const source = ctx.createMediaElementSource(audio)
+        const gain = ctx.createGain()
+        gain.gain.value = volume
+        source.connect(gain).connect(ctx.destination)
+        const cleanup = () => {
+          try {
+            source.disconnect()
+            gain.disconnect()
+          } catch {
+            /* ya desconectado */
+          }
+          pickupAudiosRef.current.delete(audio)
+        }
+        audio.addEventListener('ended', cleanup)
+        audio.addEventListener('error', cleanup)
+        pickupAudiosRef.current.add(audio)
+        audio.play().catch(cleanup)
+        return
+      } catch {
+        /* si Web Audio falla, se usa el volumen normal */
+      }
+    }
+    audio.volume = Math.min(1, Math.max(0, volume))
+    audio.play().catch(() => {})
+  }
 
   const level = LEVELS[levelIndex]
   const view = useMemo(() => makeView(level.map), [level])
@@ -1559,6 +1685,7 @@ export default function Gifts({ onBack }) {
           label: spot.label,
         },
       ])
+      playPickupSfx(sonidoHojaPapel, 8)
       return
     }
 
@@ -1574,6 +1701,7 @@ export default function Gifts({ onBack }) {
       )
       setGiftOverlay(GIFTS[levelIndex])
       setPhase('gift')
+      playPickupSfx(sonidoRegalo, 0.5)
     }
   }
 
@@ -1590,6 +1718,7 @@ export default function Gifts({ onBack }) {
         ...prev.filter((key) => key.level !== levelIndex),
         { level: levelIndex, id: codeSpot.id },
       ])
+      playPickupSfx(sonidoLlave, 8)
       playClickSfx()
       window.setTimeout(() => {
         setCodeSpot(null)
