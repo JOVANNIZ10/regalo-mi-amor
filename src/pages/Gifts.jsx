@@ -124,7 +124,7 @@ const MUSIC_VOLUME = 0.02
 /* Pasos segun el escenario: casa, jardin, bosque y calabozo */
 const STEP_SOUNDS = [pasosMadera, pasosHierba, pasosHierba, pasosCueva]
 /* Ganancia por pista (los mp3 tienen niveles muy distintos) */
-const STEP_GAINS = [6, 15, 15, 2]
+const STEP_GAINS = [6, 12, 12, 2]
 
 /* Frases de ambiente de cada escenario */
 const AMBIENT_HOUSE =
