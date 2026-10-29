@@ -1761,6 +1761,87 @@
   transform: rotate(45deg);
 }
 
+/* ---------- Frase de ambiente del escenario ---------- */
+.gifts-ambient {
+  position: absolute;
+  top: 4.4rem;
+  left: 50%;
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: min(520px, 92vw);
+  padding: 0.6rem 0.85rem;
+  border-radius: 18px;
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.45);
+  transform: translateX(-50%);
+  pointer-events: none;
+  animation: giftsAmbientIn 0.28s ease;
+}
+
+.gifts-ambient__avatar {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  padding: 2px;
+  object-fit: contain;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.gifts-ambient__body {
+  min-width: 0;
+  text-align: left;
+}
+
+.gifts-ambient__name {
+  margin: 0 0 0.1rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--accent-400);
+}
+
+.gifts-ambient__text {
+  margin: 0;
+  font-size: 0.84rem;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--text-1);
+}
+
+@keyframes giftsAmbientIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@media (max-width: 760px) {
+  .gifts-ambient {
+    top: 7.4rem;
+    width: min(360px, 92vw);
+    gap: 0.55rem;
+    padding: 0.55rem 0.7rem;
+  }
+
+  .gifts-ambient__avatar {
+    width: 46px;
+    height: 46px;
+  }
+
+  .gifts-ambient__text {
+    font-size: 0.8rem;
+  }
+}
+
 .gifts-bag__level {
   position: absolute;
   right: 4px;

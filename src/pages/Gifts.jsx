@@ -39,6 +39,10 @@ import pasosCueva from '../assets/audios/pasosCueva.mp3'
 import sonidoLlave from '../assets/audios/sonidoLlave.mp3'
 import sonidoHojaPapel from '../assets/audios/sonidoHojaPapel.mp3'
 import sonidoRegalo from '../assets/audios/sonidoRegalo.mp3'
+import regalosCasaPatoChicaAudio1 from '../assets/audios/regalosCasaPatoChicaAudio1.mp3'
+import regalosJardinPatoChicaAudio1 from '../assets/audios/regalosJardinPatoChicaAudio1.mp3'
+import regalosCuevaPatoChicaAudio1 from '../assets/audios/regalosCuevaPatoChicaAudio1.mp3'
+import regalosCuevaPatoChicoAudio1 from '../assets/audios/regalosCuevaPatoChicoAudio1.mp3'
 import regalo1 from '../assets/images/regalo1.webp'
 import regalo2 from '../assets/images/regalo2.webp'
 import regalo3 from '../assets/images/regalo3.webp'
@@ -116,11 +120,20 @@ const PAPER_COLORS = ['#ffd479', '#8fd0e8', '#c9a0e8', '#ff9a9a']
    hay salida: hay que abrir la jaula del patito.
 ------------------------------------------------------------------ */
 /* Volumen real de la musica de fondo (nodo de ganancia de Web Audio) */
-const MUSIC_VOLUME = 0.05
+const MUSIC_VOLUME = 0.02
 /* Pasos segun el escenario: casa, jardin, bosque y calabozo */
 const STEP_SOUNDS = [pasosMadera, pasosHierba, pasosHierba, pasosCueva]
 /* Ganancia por pista (los mp3 tienen niveles muy distintos) */
-const STEP_GAINS = [6, 28, 28, 2]
+const STEP_GAINS = [6, 15, 15, 2]
+
+/* Frases de ambiente de cada escenario */
+const AMBIENT_HOUSE =
+  'Tengo que rescatar rapido a mi patito. ¡Que guapo es! Quiero comermelo enterito.'
+const AMBIENT_GARDEN =
+  '¿Que estará haciendo mi amor?, seguro me echa mucho de menos, tengo que darme mucha prisa.'
+const AMBIENT_DUNGEON_ESTERA = 'Mi amor, aguanta, ahora te sacaré de ahí.'
+const AMBIENT_DUNGEON_IVAN =
+  'Perfecto mi vida, date prisa, no vaya a ser que entre el villano.'
 
 const GIFTS = [
   { name: 'Patito de peluche', image: regalo1 },
@@ -1010,6 +1023,7 @@ export default function Gifts({ onBack }) {
   const [bagGlow, setBagGlow] = useState(false)
   const [bagNote, setBagNote] = useState('')
   const [keyOverlay, setKeyOverlay] = useState(false)
+  const [ambientLine, setAmbientLine] = useState(null)
   const [paperView, setPaperView] = useState(null)
 
   /* ---------- Refs del juego ---------- */
@@ -1038,6 +1052,7 @@ export default function Gifts({ onBack }) {
   const stepsCtxRef = useRef(null)
   const stepsGainRef = useRef(null)
   const pickupAudiosRef = useRef(new Set())
+  const ambientRunRef = useRef(0)
   const phaseRef = useRef('intro')
   const viewRef = useRef({ scale: 0.7, vw: 1280, vh: 900, safeTop: 104, safeH: 678 })
 
@@ -1263,14 +1278,111 @@ export default function Gifts({ onBack }) {
         audio.addEventListener('error', cleanup)
         pickupAudiosRef.current.add(audio)
         audio.play().catch(cleanup)
-        return
+        return audio
       } catch {
         /* si Web Audio falla, se usa el volumen normal */
       }
     }
     audio.volume = Math.min(1, Math.max(0, volume))
     audio.play().catch(() => {})
+    return audio
   }
+
+  /* Muestra una frase con su etiqueta de nombre y la reproduce. */
+  const playAmbientLine = (name, text, src, after) => {
+    setAmbientLine({ name, text })
+    const audio = playPickupSfx(src, 0.9)
+    if (!audio) return
+
+    let done = false
+    let timer = 0
+    const finish = () => {
+      if (done) return
+      done = true
+      window.clearTimeout(timer)
+      if (after) {
+        after()
+      } else {
+        setAmbientLine((current) => (current?.text === text ? null : current))
+      }
+    }
+    const scheduleFallback = () => {
+      window.clearTimeout(timer)
+      const seconds =
+        Number.isFinite(audio.duration) && audio.duration > 0
+          ? audio.duration
+          : 8
+      timer = window.setTimeout(finish, seconds * 1000 + 500)
+    }
+
+    audio.addEventListener('ended', finish, { once: true })
+    audio.addEventListener('error', finish, { once: true })
+    if (audio.readyState >= 1) scheduleFallback()
+    else audio.addEventListener('loadedmetadata', scheduleFallback, { once: true })
+
+    /* Red de seguridad por si el navegador bloquea el audio. */
+    timer = window.setTimeout(finish, 12000)
+  }
+
+  /* Frases de ambiente por escenario:
+     - Casa y jardin: la pata habla en un segundo aleatorio (5-30 s).
+     - Bosque: sin frases.
+     - Calabozo: al entrar habla primero la pata y despues el pato chico. */
+  useEffect(() => {
+    if (phase !== 'room') {
+      setAmbientLine(null)
+      return undefined
+    }
+
+    const run = ++ambientRunRef.current
+    const say = (name, text, src, after) => {
+      if (ambientRunRef.current !== run) return
+      playAmbientLine(name, text, src, after)
+    }
+
+    if (levelIndex === 3) {
+      const timer = window.setTimeout(() => {
+        say(
+          'Estera',
+          AMBIENT_DUNGEON_ESTERA,
+          regalosCuevaPatoChicaAudio1,
+          () => {
+            say(
+              'Ivan',
+              AMBIENT_DUNGEON_IVAN,
+              regalosCuevaPatoChicoAudio1
+            )
+          }
+        )
+      }, 450)
+
+      return () => {
+        ambientRunRef.current += 1
+        window.clearTimeout(timer)
+      }
+    }
+
+    if (levelIndex === 0 || levelIndex === 1) {
+      const isHouse = levelIndex === 0
+      const timer = window.setTimeout(() => {
+        say(
+          'Estera',
+          isHouse ? AMBIENT_HOUSE : AMBIENT_GARDEN,
+          isHouse ? regalosCasaPatoChicaAudio1 : regalosJardinPatoChicaAudio1
+        )
+      }, 5000 + Math.random() * 25000)
+
+      return () => {
+        ambientRunRef.current += 1
+        window.clearTimeout(timer)
+      }
+    }
+
+    return () => {
+      ambientRunRef.current += 1
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, levelIndex])
 
   const level = LEVELS[levelIndex]
   const view = useMemo(() => makeView(level.map), [level])
@@ -2448,6 +2560,23 @@ export default function Gifts({ onBack }) {
           {message && (
             <div className="gifts-toast glass" role="status">
               {message}
+            </div>
+          )}
+
+          {/* Frase de ambiente del escenario */}
+          {ambientLine && (
+            <div className="gifts-ambient glass" role="status">
+              <img
+                src={
+                  ambientLine.name === 'Ivan' ? patoChicoEnfadado : patoEstera
+                }
+                alt=""
+                className="gifts-ambient__avatar"
+              />
+              <div className="gifts-ambient__body">
+                <p className="gifts-ambient__name">{ambientLine.name}</p>
+                <p className="gifts-ambient__text">{ambientLine.text}</p>
+              </div>
             </div>
           )}
 

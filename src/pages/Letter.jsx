@@ -1,11 +1,16 @@
 import { useState } from 'react'
 import GlassButton from '../components/GlassButton'
 import pato from '../assets/images/patoChicoPoseCarta1.webp'
+import cartaAudio from '../assets/audios/cartaAudio.mp3'
+import { useDialogueAudio } from '../utils/useDialogueAudio'
 import './Letter.css'
 
 export default function Letter({ onBack }) {
   const [showDuck, setShowDuck] = useState(true)
   const [opened, setOpened] = useState(false)
+
+  /* La voz de Ivan suena al abrir la carta y se corta al pasar el dialogo. */
+  useDialogueAudio(cartaAudio, showDuck)
 
   return (
     <main className="letter">
